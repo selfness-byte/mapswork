@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 class RestoreWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result {
         val container = (applicationContext as MapsworkApplication).container
-        container.registrar.synchronize()
+        container.registrar.synchronize(force = true)
         return if (container.registrar.status.value.phase == RegistrationPhase.ERROR) {
             if (runAttemptCount < 2) Result.retry() else Result.failure()
         } else Result.success()

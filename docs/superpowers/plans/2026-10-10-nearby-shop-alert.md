@@ -59,12 +59,12 @@
 - `VisitRules.transition(shop: Shop, transition: Transition, nowMillis: Long): VisitDecision`는 갱신된 상점과 알림 여부를 반환한다.
 - `Readiness.evaluate(state: DeviceState): Readiness`는 준비 또는 구체적인 부족 조건을 반환한다.
 
-- [ ] **Step 1:** 공식 체크섬을 검증해 JDK·Gradle·Android 도구를 설치하고 SDK 36·build-tools 36.0.0을 확보한다. TLS 검증을 유지한다.
-- [ ] **Step 2:** 위 인터페이스를 사용하는 실패 테스트를 먼저 작성한다. 테스트는 첫 진입의 알림, 반복 진입 억제, 나감 뒤 재진입, 1,799,999ms 억제와 1,800,000ms 허용, 꺼진 상점, 시계 역행을 확인한다.
-- [ ] **Step 3:** 이름 앞뒤 공백, 빈 이름·81자·좌표 미선택·잘못된 위도/경도·NaN·잘못된 반경, 100개에서 기존 수정과 101번째 활성화의 입력 테스트를 작성한다. 날짜 변경선 근처 거리와 동일 좌표의 거리도 확인한다.
-- [ ] **Step 4:** Android 26·29·33·36의 권한·위치 서비스·Google Play 서비스·알림 비활성화 준비 상태 테스트를 작성한다.
-- [ ] **Step 5:** `tools/cloud-gradle.sh :core:test`를 실행해 구현 부재로 실패함을 확인하고 규칙을 구현한다. 같은 명령으로 모든 실제 테스트가 통과하는지 확인한다.
-- [ ] **Step 6:** 핵심 규칙과 도구 파일을 커밋한다.
+- [x] **Step 1:** 공식 체크섬을 검증해 JDK·Gradle·Android 도구를 설치하고 SDK 36·build-tools 36.0.0을 확보한다. TLS 검증을 유지한다.
+- [x] **Step 2:** 위 인터페이스를 사용하는 실패 테스트를 먼저 작성한다. 테스트는 첫 진입의 알림, 반복 진입 억제, 나감 뒤 재진입, 1,799,999ms 억제와 1,800,000ms 허용, 꺼진 상점, 시계 역행을 확인한다.
+- [x] **Step 3:** 이름 앞뒤 공백, 빈 이름·81자·좌표 미선택·잘못된 위도/경도·NaN·잘못된 반경, 100개에서 기존 수정과 101번째 활성화의 입력 테스트를 작성한다. 날짜 변경선 근처 거리와 동일 좌표의 거리도 확인한다.
+- [x] **Step 4:** Android 26·29·33·36의 권한·위치 서비스·Google Play 서비스·알림 비활성화 준비 상태 테스트를 작성한다.
+- [x] **Step 5:** `tools/cloud-gradle.sh :core:test`를 실행해 구현 부재로 실패함을 확인하고 규칙을 구현한다. 같은 명령으로 모든 실제 테스트가 통과하는지 확인한다.
+- [x] **Step 6:** 핵심 규칙과 도구 파일을 커밋한다.
 
 ## Task 2: 휴대폰의 영속 데이터와 안전한 이벤트 처리
 
@@ -77,11 +77,11 @@
 - `AppSettings.alertsEnabled: StateFlow<Boolean>`, `fun setAlertsEnabled(enabled: Boolean)`.
 - `MapsworkApplication.container: AppContainer`는 저장소·설정·등록 관리자·알림 처리를 공유한다.
 
-- [ ] **Step 1:** Room 스키마와 변환을 구현한다. 앱에서 저장·삭제·알림 선택을 갱신할 때 Task 1 규칙을 사용하고 기존 방문 시각을 보존한다.
-- [ ] **Step 2:** 위치·반경 변경과 알림 재활성화는 방문 상태를 미확인으로 갱신한다. 이름 수정은 방문 상태를 유지한다. 알림 후보 생성은 하나의 DB 트랜잭션으로 처리한다.
-- [ ] **Step 3:** 앱 설정을 내부 SharedPreferences에 보관하고 백업·기기 전송에서 상점·설정 데이터를 제외한다.
-- [ ] **Step 4:** `tools/cloud-gradle.sh :app:compileDebugKotlin :core:test`로 Room 생성 코드와 모듈 연결을 확인한다. 데이터 재시작·삭제 경쟁 시험은 실제 기기 목록에 남긴다.
-- [ ] **Step 5:** 데이터와 앱 기반을 커밋한다.
+- [x] **Step 1:** Room 스키마와 변환을 구현한다. 앱에서 저장·삭제·알림 선택을 갱신할 때 Task 1 규칙을 사용하고 기존 방문 시각을 보존한다.
+- [x] **Step 2:** 위치·반경 변경과 알림 재활성화는 방문 상태를 미확인으로 갱신한다. 이름 수정은 방문 상태를 유지한다. 알림 후보 생성은 하나의 DB 트랜잭션으로 처리한다.
+- [x] **Step 3:** 앱 설정을 내부 SharedPreferences에 보관하고 백업·기기 전송에서 상점·설정 데이터를 제외한다.
+- [x] **Step 4:** `tools/cloud-gradle.sh :app:compileDebugKotlin :core:test`로 Room 생성 코드와 모듈 연결을 확인한다. 데이터 재시작·삭제 경쟁 시험은 실제 기기 목록에 남긴다.
+- [x] **Step 5:** 데이터와 앱 기반을 커밋한다.
 
 ## Task 3: 근접 감지·권한 상태·알림·재부팅 복구
 
@@ -93,12 +93,12 @@
 - `ShopNotifier.notify(shop: Shop)`는 상점 ID를 포함한 명시적 Activity PendingIntent로 알림을 만든다.
 - `RestoreWorker.enqueue(context: Context)`는 단일 복구 작업을 예약한다.
 
-- [ ] **Step 1:** Task 1의 준비 규칙을 실제 Android 상태에 연결한다. 권한이 부족하면 등록을 시도하거나 준비 완료라고 표시하지 않는다.
-- [ ] **Step 2:** ENTER·EXIT 감지와 INITIAL_TRIGGER_ENTER를 등록한다. API 31 이상의 mutable PendingIntent는 명시적 비공개 수신기로 제한한다. 등록 성공 시에만 등록 수를 반영한다.
-- [ ] **Step 3:** 수신기는 `goAsync`와 제한된 비동기 DB 처리를 사용한다. 최신 전체·상점 설정을 재확인하고 Task 2의 원자적 방문 갱신 후 알림을 보낸다. 실패 이벤트·미등록 ID는 안전하게 무시한다.
-- [ ] **Step 4:** 부팅·앱 교체 수신기와 WorkManager 복구를 구현한다. 앱 재진입에서도 상태를 확인하고 권한 부족·서비스 오류를 구체적으로 표시한다.
-- [ ] **Step 5:** 알림 채널, 안정된 상점별 알림 ID, 상점 상세 진입을 구현한다.
-- [ ] **Step 6:** `tools/cloud-gradle.sh :app:compileDebugKotlin :core:test`로 검증하고 커밋한다. 실제 위치 이벤트와 부팅 복구는 휴대폰 검증 대상으로 분리한다.
+- [x] **Step 1:** Task 1의 준비 규칙을 실제 Android 상태에 연결한다. 권한이 부족하면 등록을 시도하거나 준비 완료라고 표시하지 않는다.
+- [x] **Step 2:** ENTER·EXIT 감지와 INITIAL_TRIGGER_ENTER를 등록한다. API 31 이상의 mutable PendingIntent는 명시적 비공개 수신기로 제한한다. 등록 성공 시에만 등록 수를 반영한다.
+- [x] **Step 3:** 수신기는 `goAsync`와 제한된 비동기 DB 처리를 사용한다. 최신 전체·상점 설정을 재확인하고 Task 2의 원자적 방문 갱신 후 알림을 보낸다. 실패 이벤트·미등록 ID는 안전하게 무시한다.
+- [x] **Step 4:** 부팅·앱 교체 수신기와 WorkManager 복구를 구현한다. 앱 재진입에서도 상태를 확인하고 권한 부족·서비스 오류를 구체적으로 표시한다.
+- [x] **Step 5:** 알림 채널, 안정된 상점별 알림 ID, 상점 상세 진입을 구현한다.
+- [x] **Step 6:** `tools/cloud-gradle.sh :app:compileDebugKotlin :core:test`로 검증하고 커밋한다. 실제 위치 이벤트와 부팅 복구는 휴대폰 검증 대상으로 분리한다.
 
 ## Task 4: 상점 목록·지도 등록·설정과 복원 흐름
 
@@ -109,12 +109,12 @@
 - `ShopMap(point: GeoPoint?, onPointSelected: (GeoPoint) -> Unit, cameraTarget: GeoPoint?)`은 MapLibre 라이프사이클·핀·오류·지도 출처를 관리한다.
 - 화면 이동은 목록·상점 ID 기반 편집·설정 세 가지로 제한한다. 알림에서 전달받은 상점이 없으면 목록을 표시한다.
 
-- [ ] **Step 1:** 목록과 실제 준비 상태·상점 스위치·추가 버튼을 만든다. 100개 한도와 저장 오류를 한국어로 표시한다.
-- [ ] **Step 2:** 위치 선택·이름·반경·저장·삭제를 만든다. 입력 상태는 화면 재생성 시 복원하고 기존 상점은 저장 전까지 DB를 변경하지 않는다.
-- [ ] **Step 3:** OSM 지도 출처, 식별 가능한 User-Agent, 기본 캐시를 적용한다. 지도 실패의 재시도와 입력 보존을 구현한다. 현재 위치는 사용자 요청 시 한 번 조회한다.
-- [ ] **Step 4:** 권한 요청을 단계적으로 구현한다. Android 30 이상의 백그라운드 위치는 설정 안내로 연결하고, 복귀 시 준비 상태를 재계산한다.
-- [ ] **Step 5:** 앱 활성화 시 현재 위치를 한 번 확인해 방문 상태를 보정한다. 자동 알림 후보를 만들지는 않는다. 오래된 알림·삭제된 상점·위치 조회 실패를 처리한다.
-- [ ] **Step 6:** `tools/cloud-gradle.sh :app:assembleDebug :app:lintDebug :core:test`로 확인하고 화면 구현을 커밋한다.
+- [x] **Step 1:** 목록과 실제 준비 상태·상점 스위치·추가 버튼을 만든다. 100개 한도와 저장 오류를 한국어로 표시한다.
+- [x] **Step 2:** 위치 선택·이름·반경·저장·삭제를 만든다. 입력 상태는 화면 재생성 시 복원하고 기존 상점은 저장 전까지 DB를 변경하지 않는다.
+- [x] **Step 3:** OSM 지도 출처, 식별 가능한 User-Agent, 기본 캐시를 적용한다. 지도 실패의 재시도와 입력 보존을 구현한다. 현재 위치는 사용자 요청 시 한 번 조회한다.
+- [x] **Step 4:** 권한 요청을 단계적으로 구현한다. Android 30 이상의 백그라운드 위치는 설정 안내로 연결하고, 복귀 시 준비 상태를 재계산한다.
+- [x] **Step 5:** 앱 활성화 시 현재 위치를 한 번 확인해 방문 상태를 보정한다. 자동 알림 후보를 만들지는 않는다. 오래된 알림·삭제된 상점·위치 조회 실패를 처리한다.
+- [x] **Step 6:** `tools/cloud-gradle.sh :app:assembleDebug :app:lintDebug :core:test`로 확인하고 화면 구현을 커밋한다.
 
 ## Task 5: 전체 검증·검토·전달 파일과 재사용 환경
 

@@ -26,11 +26,12 @@ class GeofenceRegistrar(
 ) {
     private val mutex = Mutex()
     private val mutableStatus = MutableStateFlow(RegistrationStatus())
+    @Volatile private var lastRegisteredIds: Set<String>? = null
     val status: StateFlow<RegistrationStatus> = mutableStatus.asStateFlow()
 
     fun invalidate() { mutableStatus.value = RegistrationStatus() }
 
-    suspend fun synchronize() = mutex.withLock {
+    suspend fun synchronize(force: Boolean = false) = mutex.withLock {
         mutableStatus.value = RegistrationStatus()
         try {
             val active = repository.all().filter { it.enabled }
@@ -50,11 +51,24 @@ class GeofenceRegistrar(
                     mutableStatus.value = RegistrationStatus(RegistrationPhase.ERROR,
                         message = "알림은 최대 100곳까지 켤 수 있어요.")
                 } else {
-                    withTimeout(requestTimeoutMillis) {
-                        transport.clear()
-                        transport.register(active)
+                    val requested = active.map { it.geofenceRequestId }.toSet()
+                    if (force || requested != lastRegisteredIds) {
+                        withTimeout(requestTimeoutMillis) {
+                            lastRegisteredIds = null
+                            transport.clear()
+                            transport.register(active)
+                        }
                     }
-                    mutableStatus.value = RegistrationStatus(RegistrationPhase.READY, active.size)
+                    if (!settings.alertsEnabled.value) {
+                        clearWhenUnavailable()
+                        mutableStatus.value = RegistrationStatus(RegistrationPhase.PAUSED)
+                    } else if (repository.all().filter { it.enabled }.map { it.geofenceRequestId }.toSet() != requested) {
+                        lastRegisteredIds = null
+                        mutableStatus.value = RegistrationStatus()
+                    } else {
+                        lastRegisteredIds = requested
+                        mutableStatus.value = RegistrationStatus(RegistrationPhase.READY, active.size)
+                    }
                 }
             }
         } catch (_: TimeoutCancellationException) {
@@ -67,6 +81,8 @@ class GeofenceRegistrar(
     }
 
     private suspend fun clearWhenUnavailable() {
+        lastRegisteredIds = null
+        if (!deviceState().playServices) return
         try { withTimeout(requestTimeoutMillis) { transport.clear() } }
         catch (_: TimeoutCancellationException) { /* Permissions or service recovery can retry clearing. */ }
         catch (cancelled: CancellationException) { throw cancelled }
@@ -74,6 +90,7 @@ class GeofenceRegistrar(
     }
 
     private fun publishFailure() {
+        lastRegisteredIds = null
         val readiness = Readiness.evaluate(deviceState())
         mutableStatus.value = if (readiness != Readiness.READY) {
             RegistrationStatus(RegistrationPhase.BLOCKED, reason = readiness)
@@ -84,6 +101,7 @@ class GeofenceRegistrar(
     }
 
     fun reportEventError() {
+        lastRegisteredIds = null
         mutableStatus.value = RegistrationStatus(RegistrationPhase.ERROR,
             message = "위치 감지가 잠시 중단됐어요. 알림 설정에서 다시 확인해 주세요.")
     }

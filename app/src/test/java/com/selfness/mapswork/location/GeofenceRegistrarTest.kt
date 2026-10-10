@@ -29,11 +29,13 @@ class GeofenceRegistrarTest {
         val batches = mutableListOf<List<Shop>>()
         var fail = false
         var delayMillis = 0L
+        var duringRegister: (suspend () -> Unit)? = null
         override suspend fun clear() { clears++ }
         override suspend fun register(shops: List<Shop>) {
             if (delayMillis > 0) kotlinx.coroutines.delay(delayMillis)
             if (fail) error("transport unavailable")
             batches.add(shops)
+            duringRegister?.invoke()
         }
     }
 
@@ -108,6 +110,24 @@ class GeofenceRegistrarTest {
         registrar.synchronize()
         registrar.invalidate()
         assertEquals(RegistrationPhase.CHECKING, registrar.status.value.phase)
+        assertEquals(0, registrar.status.value.registeredCount)
+    }
+
+    @Test fun renamingShopKeepsItsExistingGeofenceRegistration() = runBlocking {
+        val draft = ShopDraft("카페", GeoPoint(37.5, 127.0))
+        repository.save(draft, null)
+        registrar.synchronize()
+        repository.save(draft.copy(name = "새 이름"), repository.all().single().id)
+        registrar.synchronize()
+        assertEquals(1, transport.batches.size)
+        assertEquals(RegistrationPhase.READY, registrar.status.value.phase)
+    }
+
+    @Test fun pausedDuringRegistrationIsNotReportedReadyAfterwards() = runBlocking {
+        repository.save(ShopDraft("카페", GeoPoint(37.5, 127.0)), null)
+        transport.duringRegister = { settings.setAlertsEnabled(false) }
+        registrar.synchronize()
+        assertEquals(RegistrationPhase.PAUSED, registrar.status.value.phase)
         assertEquals(0, registrar.status.value.registeredCount)
     }
 }

@@ -65,7 +65,7 @@ Google Play 서비스의 시스템 근접 감지를 사용합니다. 도착과 �
 
 Firebase Hosting의 버전 JSON을 먼저 확인하며 연결 실패 시 공개 GitHub의 `downloads/update.json`을 확인합니다. APK는 GitHub에서 받고 해시·앱 식별자·버전·서명을 검사합니다. 같은 앱 서명으로 설치하면 기존 상점 데이터가 유지됩니다. 앱을 삭제하고 다시 설치하면 데이터는 사라집니다. 인터넷이 끊겨 실패하면 재시도할 수 있습니다.
 
-전달본에는 `inanimals-1977-mapswork` 주소가 들어 있지만 **Firebase 사이트 배포는 아직 수행하지 않았습니다.** `FIREBASE_UPDATE_SETUP.ko.md`의 배포 단계가 필요합니다. 연결 전에도 GitHub 확인 경로를 사용합니다. Firebase에는 상점·위치 데이터를 보내지 않습니다.
+전달본에는 `https://inanimals-1977.web.app/mapswork/update.json` 주소가 들어 있지만 **Firebase 파일 배포는 아직 수행하지 않았습니다.** `FIREBASE_UPDATE_SETUP.ko.md`에 따라 기존 사이트에 업데이트 파일을 추가해야 합니다. 연결 전에도 GitHub 확인 경로를 사용합니다. Firebase에는 상점·위치 데이터를 보내지 않습니다.
 
 0.1.0에는 이 업데이트 메뉴가 없으므로 새 APK를 직접 설치해야 합니다. 0.2.0의 업데이트 메뉴에서 0.3.0을 설치하면 이후 자동 확인을 사용할 수 있습니다.
 

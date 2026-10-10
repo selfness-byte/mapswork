@@ -107,6 +107,7 @@ def main():
         "physical_android_device_tested": False,
         "google_maps_api_key_configured": google_maps_key_configured(),
         "firebase_hosting_site": firebase_hosting_site(),
+        "firebase_manifest_path": "/mapswork/update.json",
         "firebase_hosting_deployment_verified": False,
         "github_update_fallback_enabled": True,
         "automatic_update_check_interval_hours": 24,
@@ -124,7 +125,7 @@ def main():
                   apkUrl=f"https://raw.githubusercontent.com/selfness-byte/mapswork/codex/nearby-shop-alert/downloads/{apk.name}",
                   sha256=report["apk_sha256"], notes=notes)
     (DIST / "update.json").write_text(json.dumps(update, ensure_ascii=False, indent=2) + "\n")
-    firebase = prepare_firebase(DIST, DIST / "firebase-hosting", site=firebase_hosting_site() or "inanimals-1977-mapswork")
+    firebase = prepare_firebase(DIST, DIST / "firebase-hosting", site=firebase_hosting_site() or "inanimals-1977")
     mac_saver = write_mac_saver(update)
     with (DIST / "VERIFY_LOG.txt").open("a") as log:
         run(["bash", "-n", mac_saver], log)
@@ -172,7 +173,7 @@ def firebase_hosting_site():
         for line in properties.read_text().splitlines():
             if line.strip().startswith("mapswork.firebaseHostingSite="):
                 return line.split("=", 1)[1].strip()
-    return "inanimals-1977-mapswork"
+    return "inanimals-1977"
 
 
 def write_mac_saver(update):

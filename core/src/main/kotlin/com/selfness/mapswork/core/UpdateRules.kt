@@ -25,7 +25,7 @@ object UpdateRules {
         val site = firebaseHostingSite.trim()
         if (site.isEmpty()) return MANIFEST_URL
         require(Regex("[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?").matches(site))
-        return "https://$site.web.app/updates/update.json"
+        return "https://$site.web.app/mapswork/update.json"
     }
 
     fun validate(release: UpdateRelease): UpdateRelease {

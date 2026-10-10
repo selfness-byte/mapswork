@@ -20,7 +20,7 @@ val firebaseHostingSite = providers.environmentVariable("MAPSWORK_FIREBASE_HOSTI
     ?: Properties().apply {
         val propertiesFile = rootProject.file("local.properties")
         if (propertiesFile.isFile) propertiesFile.inputStream().use { load(it) }
-    }.getProperty("mapswork.firebaseHostingSite", "inanimals-1977-mapswork").trim()
+    }.getProperty("mapswork.firebaseHostingSite", "inanimals-1977").trim()
 require(firebaseHostingSite.isEmpty() || Regex("[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?").matches(firebaseHostingSite)) {
     "Firebase Hosting site must be a DNS label."
 }

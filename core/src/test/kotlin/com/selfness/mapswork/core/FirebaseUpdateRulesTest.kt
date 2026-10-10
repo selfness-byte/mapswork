@@ -5,15 +5,15 @@ import org.junit.Test
 
 class FirebaseUpdateRulesTest {
     @Test fun projectSiteProducesTheExactHttpsManifestAddress() {
-        assertEquals("https://inanimals-1977-mapswork.web.app/updates/update.json",
-            UpdateRules.manifestUrl("inanimals-1977-mapswork"))
+        assertEquals("https://inanimals-1977.web.app/mapswork/update.json",
+            UpdateRules.manifestUrl("inanimals-1977"))
     }
     @Test fun anUnconfiguredSiteRetainsTheExistingGitHubEndpoint() {
         assertEquals(UpdateRules.MANIFEST_URL, UpdateRules.manifestUrl(""))
     }
     @Test fun whitespaceAroundTheSiteIsRemoved() {
-        assertEquals(UpdateRules.manifestUrl("inanimals-1977-mapswork"),
-            UpdateRules.manifestUrl("  inanimals-1977-mapswork  "))
+        assertEquals(UpdateRules.manifestUrl("inanimals-1977"),
+            UpdateRules.manifestUrl("  inanimals-1977  "))
     }
     @Test fun aSiteCannotInjectAnotherHostPathOrCredential() {
         listOf("https://other.web.app", "other.web.app", "user@site", "site/path", "site?token=x",

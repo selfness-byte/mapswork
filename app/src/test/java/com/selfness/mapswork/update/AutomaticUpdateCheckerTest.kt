@@ -130,6 +130,21 @@ class AutomaticUpdateCheckerTest {
         assertEquals(AutomaticUpdateState(), store.value)
         assertTrue(notifications.isEmpty())
     }
+    @Test fun cancellationAfterPostingStillAcknowledgesThatVersion() = runBlocking {
+        lateinit var checking: Job
+        val checker = AutomaticUpdateChecker(source, store, 3, 35, { enabled }, {
+            notifications += it
+            checking.cancel()
+            true
+        }, { now })
+        checking = launch(Dispatchers.Default, start = CoroutineStart.LAZY) { checker.check() }
+        checking.start()
+        checking.join()
+        assertEquals(release.versionCode, store.value.lastNotifiedVersion)
+        now += 86_400_000
+        checker().check()
+        assertEquals(listOf(release), notifications)
+    }
     @Test fun currentAndUnsupportedVersionsDoNotNotify() = runBlocking {
         source.release = release.copy(versionCode = 3)
         checker().check()

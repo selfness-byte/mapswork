@@ -6,6 +6,7 @@ import com.selfness.mapswork.core.UpdateRelease
 import com.selfness.mapswork.core.UpdateRules
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
@@ -46,10 +47,16 @@ class AutomaticUpdateChecker(
                 currentCoroutineContext().ensureActive()
                 if (!isEnabled()) return@delivery null
                 val available = UpdateRules.availability(release, installedCode, sdk) == UpdateAvailability.AVAILABLE
-                available && release.versionCode > state.lastNotifiedVersion && notify(release)
+                val delivered = available && release.versionCode > state.lastNotifiedVersion && notify(release)
+                if (delivered) {
+                    // Once posted, persist delivery even if WorkManager cancels while dispatching back.
+                    withContext(NonCancellable + Dispatchers.IO) {
+                        store.write(state.copy(lastCheckedAtMillis = now, lastNotifiedVersion = release.versionCode))
+                    }
+                }
+                delivered
             } ?: return@withContext AutomaticUpdateResult.SKIPPED
-            store.write(state.copy(lastCheckedAtMillis = now,
-                lastNotifiedVersion = if (notified) release.versionCode else state.lastNotifiedVersion))
+            if (!notified) store.write(state.copy(lastCheckedAtMillis = now))
             AutomaticUpdateResult.CHECKED
         } catch (cancelled: CancellationException) {
             throw cancelled

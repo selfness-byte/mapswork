@@ -1,8 +1,8 @@
 {
-  "versionCode": 2,
-  "versionName": "0.2.0",
+  "versionCode": 3,
+  "versionName": "0.3.0",
   "minSdk": 26,
-  "apkUrl": "https://raw.githubusercontent.com/selfness-byte/mapswork/codex/nearby-shop-alert/downloads/mapswork-0.2.0-test.apk",
-  "sha256": "0a8e4fcff019cfaa9ba25ce7c4ec09b9833bdde9eed922bf9eda8c441c95ac3e",
-  "notes": "앱 이름을 ‘이곳’으로 바꾸고 첫 화면의 설정 버튼을 키웠습니다.\n설정에서 GitHub 업데이트 확인·다운로드·설치를 할 수 있습니다.\n상점 이름 검색과 Google 지도 앱으로 위치 보기 버튼을 추가했습니다.\n앱 내부 Google 지도·내 위치 마커·검색 결과 선택은 Google API 키를 연결한 업데이트에서 사용할 수 있습니다. 현재 APK는 연결 대기 상태입니다."
+  "apkUrl": "https://raw.githubusercontent.com/selfness-byte/mapswork/codex/nearby-shop-alert/downloads/mapswork-0.3.0-test.apk",
+  "sha256": "488fec7dc837b7060b0be8801906814ebc28d5bac0c0b16d60de91fbce09e467",
+  "notes": "Firebase Hosting 버전 파일을 확인하는 자동 업데이트 알림을 추가했습니다.\n설정의 ‘새 버전 자동 확인’ 스위치로 하루 한 번 확인을 켜거나 끌 수 있습니다.\n업데이트 알림을 누르면 설정이 열립니다. APK 다운로드와 설치는 사용자가 확인합니다.\nFirebase 연결 실패 시 기존 GitHub 버전 파일에서 확인합니다. 프로젝트의 Hosting 배포가 필요합니다.\n앱 내부 Google 지도·검색은 기존처럼 API 키 연결 대기입니다."
 }

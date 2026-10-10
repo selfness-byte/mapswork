@@ -64,10 +64,12 @@ fun MapsworkApp(viewModel: MapsworkViewModel, incomingShopId: String?, onIncomin
     BackHandler(enabled = screen != "list") { screen = "list" }
 
     when (screen) {
-        "edit" -> ShopEditorScreen(viewModel, editingId, device,
-            onBack = { screen = "list" }, onSaved = { screen = "list"; message("저장했어요") },
-            onMissing = { screen = "list"; message("이미 삭제된 상점이에요.") },
-            onRequestLocation = requestLocation, onMessage = message, snackbar = snackbar)
+        "edit" -> key(editingId) {
+            ShopEditorScreen(viewModel, editingId, device,
+                onBack = { screen = "list" }, onSaved = { screen = "list"; message("저장했어요") },
+                onMissing = { screen = "list"; message("이미 삭제된 상점이에요.") },
+                onRequestLocation = requestLocation, onMessage = message, snackbar = snackbar)
+        }
         "settings" -> SettingsScreen(enabled, device, registration,
             onBack = { screen = "list" }, onEnable = viewModel::setAlertsEnabled,
             onLocation = requestLocation,

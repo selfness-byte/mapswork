@@ -7,7 +7,6 @@ import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
 import com.selfness.mapswork.MapsworkApplication
 import com.selfness.mapswork.core.*
-import kotlinx.coroutines.*
 
 class GeofenceReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -25,26 +24,6 @@ class GeofenceReceiver : BroadcastReceiver() {
         }
         val ids = event.triggeringGeofences?.map { it.requestId } ?: return
         val pending = goAsync()
-        container.scope.launch {
-            try {
-                withTimeout(8_000) {
-                    if (Readiness.evaluate(DeviceStateReader.read(context)) != Readiness.READY) return@withTimeout
-                    val candidates = container.repository.consumeTransitions(ids, transition, System.currentTimeMillis())
-                    for (shop in candidates) {
-                        val latest = container.repository.find(shop.id)
-                        if (container.settings.alertsEnabled.value && latest?.enabled == true &&
-                            latest.registrationVersion == shop.registrationVersion) {
-                            container.notifier.notify(latest)
-                        }
-                    }
-                }
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (_: Exception) {
-                container.registrar.reportEventError()
-            } finally {
-                pending.finish()
-            }
-        }
+        container.events.submit(ids, transition, System.currentTimeMillis()) { pending.finish() }
     }
 }

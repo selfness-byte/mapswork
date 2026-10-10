@@ -36,35 +36,62 @@ class ShopRepositoryTest {
         return repository.all().single()
     }
 
+    private suspend fun consume(ids: List<String>, transition: Transition, now: Long,
+        deliver: (Shop) -> Boolean = { true }) = repository.consumeTransitions(ids, transition, now, deliver)
+
     @Test fun savesNameWithoutRemovingInternalSpaces() = runBlocking {
         assertEquals("커피 집", saveShop().name)
     }
 
     @Test fun duplicateEnterEventsProduceOneNotificationCandidate() = runBlocking {
         val shop = saveShop()
-        assertEquals(1, repository.consumeTransitions(listOf(shop.geofenceRequestId, shop.geofenceRequestId), Transition.ENTER, 2_000_000).size)
-        assertTrue(repository.consumeTransitions(listOf(shop.geofenceRequestId), Transition.ENTER, 4_000_000).isEmpty())
+        assertEquals(1, consume(listOf(shop.geofenceRequestId, shop.geofenceRequestId), Transition.ENTER, 2_000_000).size)
+        assertTrue(consume(listOf(shop.geofenceRequestId), Transition.ENTER, 4_000_000).isEmpty())
         assertEquals(2_000_000L, repository.find(shop.id)?.lastNotifiedAtMillis)
+    }
+
+    @Test fun rejectedNotificationDoesNotConsumeFirstVisitOrCooldown() = runBlocking {
+        val shop = saveShop()
+        val delivered = consume(listOf(shop.geofenceRequestId), Transition.ENTER,
+            2_000_000, deliver = { false })
+        assertTrue(delivered.isEmpty())
+        assertEquals(VisitState.UNKNOWN, repository.find(shop.id)?.visitState)
+        assertNull(repository.find(shop.id)?.lastNotifiedAtMillis)
+        assertEquals(1, consume(listOf(shop.geofenceRequestId), Transition.ENTER,
+            2_000_100, deliver = { true }).size)
+    }
+
+    @Test fun failedLaterDeliveryKeepsPreviousSuccessfulNotificationTime() = runBlocking {
+        val shop = saveShop()
+        consume(listOf(shop.geofenceRequestId), Transition.ENTER, 2_000_000)
+        consume(listOf(shop.geofenceRequestId), Transition.EXIT, 2_000_100)
+        consume(listOf(shop.geofenceRequestId), Transition.ENTER,
+            3_800_000, deliver = { false })
+        val saved = repository.find(shop.id)!!
+        assertEquals(VisitState.OUTSIDE, saved.visitState)
+        assertEquals(2_000_000L, saved.lastNotifiedAtMillis)
+        assertEquals(1, consume(listOf(shop.geofenceRequestId), Transition.ENTER,
+            3_800_100, deliver = { true }).size)
     }
 
     @Test fun deletedShopIsIgnoredByLateEvent() = runBlocking {
         val shop = saveShop()
         repository.delete(shop.id)
-        assertTrue(repository.consumeTransitions(listOf(shop.geofenceRequestId), Transition.ENTER, 2_000_000).isEmpty())
+        assertTrue(consume(listOf(shop.geofenceRequestId), Transition.ENTER, 2_000_000).isEmpty())
     }
 
     @Test fun disabledShopIsIgnoredByLateEvent() = runBlocking {
         val shop = saveShop()
         assertTrue(repository.setEnabled(shop.id, false).isEmpty())
-        assertTrue(repository.consumeTransitions(listOf(shop.geofenceRequestId), Transition.ENTER, 2_000_000).isEmpty())
+        assertTrue(consume(listOf(shop.geofenceRequestId), Transition.ENTER, 2_000_000).isEmpty())
     }
 
     @Test fun eventForPreviousPinIsIgnoredAfterMove() = runBlocking {
         val original = saveShop()
         repository.save(draft.copy(point = GeoPoint(37.6, 127.1)), original.id)
-        assertTrue(repository.consumeTransitions(listOf(original.geofenceRequestId), Transition.ENTER, 2_000_000).isEmpty())
+        assertTrue(consume(listOf(original.geofenceRequestId), Transition.ENTER, 2_000_000).isEmpty())
         val moved = repository.find(original.id)!!
-        assertEquals(1, repository.consumeTransitions(listOf(moved.geofenceRequestId), Transition.ENTER, 2_000_000).size)
+        assertEquals(1, consume(listOf(moved.geofenceRequestId), Transition.ENTER, 2_000_000).size)
     }
 
     @Test fun editingDeletedShopDoesNotRecreateIt() = runBlocking {
@@ -77,13 +104,13 @@ class ShopRepositoryTest {
     @Test fun globalPauseSuppressesEventsWithoutConsumingVisit() = runBlocking {
         val shop = saveShop()
         settings.setAlertsEnabled(false)
-        assertTrue(repository.consumeTransitions(listOf(shop.geofenceRequestId), Transition.ENTER, 2_000_000).isEmpty())
+        assertTrue(consume(listOf(shop.geofenceRequestId), Transition.ENTER, 2_000_000).isEmpty())
         assertEquals(VisitState.UNKNOWN, repository.find(shop.id)?.visitState)
     }
 
     @Test fun nameEditPreservesVisitAndLastNotification() = runBlocking {
         val shop = saveShop()
-        repository.consumeTransitions(listOf(shop.geofenceRequestId), Transition.ENTER, 2_000_000)
+        consume(listOf(shop.geofenceRequestId), Transition.ENTER, 2_000_000)
         assertTrue(repository.save(draft.copy(name = "새 이름"), shop.id).isEmpty())
         val changed = repository.find(shop.id)!!
         assertEquals(VisitState.INSIDE, changed.visitState)
@@ -92,24 +119,24 @@ class ShopRepositoryTest {
 
     @Test fun movedPinResetsPresenceButKeepsCooldown() = runBlocking {
         val shop = saveShop()
-        repository.consumeTransitions(listOf(shop.geofenceRequestId), Transition.ENTER, 2_000_000)
+        consume(listOf(shop.geofenceRequestId), Transition.ENTER, 2_000_000)
         repository.save(draft.copy(point = GeoPoint(37.6, 127.1)), shop.id)
         assertEquals(VisitState.UNKNOWN, repository.find(shop.id)?.visitState)
-        assertTrue(repository.consumeTransitions(listOf(repository.find(shop.id)!!.geofenceRequestId), Transition.ENTER, 2_000_100).isEmpty())
+        assertTrue(consume(listOf(repository.find(shop.id)!!.geofenceRequestId), Transition.ENTER, 2_000_100).isEmpty())
     }
 
     @Test fun currentLocationInsideDoesNotConsumeInitialEnter() = runBlocking {
         val shop = saveShop()
         repository.reconcilePresence(shop.point)
-        assertEquals(1, repository.consumeTransitions(listOf(shop.geofenceRequestId), Transition.ENTER, 2_000_000).size)
+        assertEquals(1, consume(listOf(shop.geofenceRequestId), Transition.ENTER, 2_000_000).size)
     }
 
     @Test fun currentLocationOutsideRepairsMissedExit() = runBlocking {
         val shop = saveShop()
-        repository.consumeTransitions(listOf(shop.geofenceRequestId), Transition.ENTER, 2_000_000)
+        consume(listOf(shop.geofenceRequestId), Transition.ENTER, 2_000_000)
         repository.reconcilePresence(GeoPoint(38.0, 127.0))
         assertEquals(VisitState.OUTSIDE, repository.find(shop.id)?.visitState)
-        assertEquals(1, repository.consumeTransitions(listOf(shop.geofenceRequestId), Transition.ENTER, 3_800_000).size)
+        assertEquals(1, consume(listOf(shop.geofenceRequestId), Transition.ENTER, 3_800_000).size)
     }
 
     @Test fun databaseReopenKeepsPlacesAndVisitState() = runBlocking {
@@ -121,7 +148,7 @@ class ShopRepositoryTest {
         val firstRepository = ShopRepository(first, settings)
         firstRepository.save(draft, null)
         val shop = firstRepository.all().single()
-        firstRepository.consumeTransitions(listOf(shop.geofenceRequestId), Transition.ENTER, 2_000_000)
+        firstRepository.consumeTransitions(listOf(shop.geofenceRequestId), Transition.ENTER, 2_000_000) { true }
         first.close()
         val second = open()
         try {

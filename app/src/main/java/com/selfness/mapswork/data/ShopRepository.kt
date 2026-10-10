@@ -45,7 +45,8 @@ class ShopRepository(private val database: MapsworkDatabase, private val setting
 
     suspend fun delete(id: String) { dao.delete(id) }
 
-    suspend fun consumeTransitions(ids: List<String>, transition: Transition, nowMillis: Long): List<Shop> =
+    suspend fun consumeTransitions(ids: List<String>, transition: Transition, nowMillis: Long,
+        deliver: (Shop) -> Boolean): List<Shop> =
         database.withTransaction {
             if (!settings.alertsEnabled.value) return@withTransaction emptyList()
             buildList {
@@ -56,6 +57,9 @@ class ShopRepository(private val database: MapsworkDatabase, private val setting
                     val entity = dao.find(requestId.substring(0, separator)) ?: continue
                     if (!entity.enabled || version != entity.registrationVersion) continue
                     val result = VisitRules.transition(entity.toShop(), transition, nowMillis)
+                    // Keep delivery and state under the same DB transaction. A rejected post must
+                    // leave the visit and previous successful notification time available to retry.
+                    if (result.shouldNotify && !deliver(result.shop)) continue
                     dao.upsert(entity.copy(visitState = result.shop.visitState.name,
                         lastNotifiedAtMillis = result.shop.lastNotifiedAtMillis))
                     if (result.shouldNotify) add(result.shop)

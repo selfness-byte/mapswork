@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import androidx.room.Room
 import com.selfness.mapswork.data.*
+import com.selfness.mapswork.core.Readiness
 import com.selfness.mapswork.location.*
 import com.selfness.mapswork.notifications.ShopNotifier
 import kotlinx.coroutines.*
@@ -27,4 +28,15 @@ class AppContainer(context: Context) {
     val registrar = GeofenceRegistrar(repository, settings, PlayServicesGeofenceTransport(context)) {
         DeviceStateReader.read(context)
     }
+    val events = GeofenceEventQueue(scope, process = { ids, transition, receivedAtMillis ->
+        if (Readiness.evaluate(DeviceStateReader.read(context)) == Readiness.READY) {
+            repository.consumeTransitions(ids, transition, receivedAtMillis) { shop ->
+                settings.alertsEnabled.value &&
+                    Readiness.evaluate(DeviceStateReader.read(context)) == Readiness.READY && notifier.notify(shop)
+            }
+        }
+    }, onFailure = {
+        registrar.reportEventError()
+        RestoreWorker.enqueue(context)
+    })
 }

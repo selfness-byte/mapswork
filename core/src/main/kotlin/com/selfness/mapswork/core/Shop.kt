@@ -29,7 +29,10 @@ data class Shop(
     val enabled: Boolean = true,
     val visitState: VisitState = VisitState.UNKNOWN,
     val lastNotifiedAtMillis: Long? = null,
-)
+    val registrationVersion: Long = 1,
+) {
+    val geofenceRequestId: String get() = "$id:$registrationVersion"
+}
 
 data class ShopDraft(
     val name: String,

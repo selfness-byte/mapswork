@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "mapswork"
-include(":core")
+include(":core", ":app")

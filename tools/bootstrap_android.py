@@ -35,7 +35,9 @@ def download_verified(url, target, expected, algorithm="sha256"):
 
 
 def java_options():
-    options = []
+    task_user = TOOLS / "user-home"
+    task_user.mkdir(parents=True, exist_ok=True)
+    options = [f"-Duser.home={task_user}"]
     proxy = urlparse(os.environ.get("HTTPS_PROXY", ""))
     if proxy.hostname:
         for protocol in ("http", "https"):

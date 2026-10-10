@@ -1,6 +1,6 @@
 package com.selfness.mapswork.core
 
-enum class ValidationError { NAME, LOCATION, RADIUS, ACTIVE_LIMIT }
+enum class ValidationError { NAME, LOCATION, RADIUS, ACTIVE_LIMIT, NOT_FOUND }
 
 object ShopRules {
     const val MAX_ENABLED = 100

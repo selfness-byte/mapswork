@@ -3,11 +3,22 @@ package com.selfness.mapswork.update
 import com.selfness.mapswork.core.UpdateRelease
 import java.io.File
 import java.io.IOException
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.*
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import kotlin.test.*
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class AutomaticUpdateCheckerTest {
+    @Before fun setUpMainDispatcher() { Dispatchers.setMain(Dispatchers.Unconfined) }
+    @After fun restoreMainDispatcher() { Dispatchers.resetMain() }
     private val release = UpdateRelease(4, "0.4.0", 26,
         "https://raw.githubusercontent.com/selfness-byte/mapswork/codex/nearby-shop-alert/downloads/mapswork-0.4.0-test.apk",
         "a".repeat(64), "새 버전")
@@ -81,6 +92,36 @@ class AutomaticUpdateCheckerTest {
         source.beforeReturn = { enabled = false }
         checker().check()
         assertTrue(notifications.isEmpty())
+        assertEquals(AutomaticUpdateState(), store.value)
+    }
+    @Test fun turningOffBeforePendingDeliveryPreventsTheNotification() = runBlocking {
+        val deliveryPending = CountDownLatch(1)
+        val allowDelivery = CountDownLatch(1)
+        val pendingMainTask = AtomicReference<Runnable>()
+        Dispatchers.setMain(object : CoroutineDispatcher() {
+            override fun dispatch(context: CoroutineContext, block: Runnable) {
+                pendingMainTask.set(block)
+                deliveryPending.countDown()
+            }
+        })
+        val checker = AutomaticUpdateChecker(source, store, 3, 35, { enabled }, {
+            deliveryPending.countDown()
+            check(allowDelivery.await(10, TimeUnit.SECONDS))
+            notifications += it
+            true
+        }, { now })
+        val checking = async(Dispatchers.Default) { checker.check() }
+        try {
+            assertTrue(deliveryPending.await(10, TimeUnit.SECONDS), "Delivery must reach the barrier")
+            enabled = false
+            notifications.clear()
+        } finally {
+            allowDelivery.countDown()
+            pendingMainTask.get()?.run()
+        }
+        val result = checking.await()
+        assertTrue(notifications.isEmpty(), "Disabling automatic checks must prevent a pending notification")
+        assertEquals(AutomaticUpdateResult.SKIPPED, result)
         assertEquals(AutomaticUpdateState(), store.value)
     }
     @Test fun networkFailureIsRetryableWithoutConsumingTheCheck() = runBlocking {

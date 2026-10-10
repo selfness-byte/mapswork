@@ -41,10 +41,13 @@ class AutomaticUpdateChecker(
                 return@withContext AutomaticUpdateResult.SKIPPED
             }
             val release = UpdateRules.validate(source.fetchRelease())
-            currentCoroutineContext().ensureActive()
-            if (!isEnabled()) return@withContext AutomaticUpdateResult.SKIPPED
-            val available = UpdateRules.availability(release, installedCode, sdk) == UpdateAvailability.AVAILABLE
-            val notified = available && release.versionCode > state.lastNotifiedVersion && notify(release)
+            // Settings disables and cancels on main; keep the final check and post in that same turn.
+            val notified = withContext(Dispatchers.Main.immediate) delivery@{
+                currentCoroutineContext().ensureActive()
+                if (!isEnabled()) return@delivery null
+                val available = UpdateRules.availability(release, installedCode, sdk) == UpdateAvailability.AVAILABLE
+                available && release.versionCode > state.lastNotifiedVersion && notify(release)
+            } ?: return@withContext AutomaticUpdateResult.SKIPPED
             store.write(state.copy(lastCheckedAtMillis = now,
                 lastNotifiedVersion = if (notified) release.versionCode else state.lastNotifiedVersion))
             AutomaticUpdateResult.CHECKED

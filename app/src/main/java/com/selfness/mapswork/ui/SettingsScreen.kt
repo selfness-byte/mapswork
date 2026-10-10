@@ -21,13 +21,14 @@ fun SettingsScreen(
     onBackground: () -> Unit, onNotifications: () -> Unit, onLocationSettings: () -> Unit,
     onAppSettings: () -> Unit, onRefresh: () -> Unit, snackbar: SnackbarHostState,
     update: UpdateStatus, onUpdateCheck: () -> Unit, onUpdateDownload: () -> Unit, onUpdateInstall: () -> Unit,
+    automaticUpdates: Boolean, onAutomaticUpdates: (Boolean) -> Unit,
 ) {
     Scaffold(topBar = { TopAppBar(title = { Text("설정") }, navigationIcon = {
         IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "목록으로") }
     }) }, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            UpdateCard(update, onUpdateCheck, onUpdateDownload, onUpdateInstall)
+            UpdateCard(update, onUpdateCheck, onUpdateDownload, onUpdateInstall, automaticUpdates, onAutomaticUpdates)
             Card {
                 Row(Modifier.padding(16.dp)) {
                     Column(Modifier.weight(1f)) {
@@ -45,7 +46,7 @@ fun SettingsScreen(
                 "위치 권한을 ‘항상 허용’으로 설정해야 화면을 닫은 상태에서도 알림을 받을 수 있어요.",
                 "항상 허용 설정", onBackground, canAct = device.fineLocation)
             SettingCard("휴대폰 알림", device.notifications,
-                "상점에 도착했다는 알림을 표시해요. 앱 알림과 ‘저장한 상점 근처 알림’을 켜 주세요.", "알림 허용", onNotifications)
+                "상점 도착과 새 버전 알림을 표시해요. 앱 알림과 ‘저장한 상점 근처 알림’·‘앱 업데이트’를 켜 주세요.", "알림 허용", onNotifications)
             SettingCard("휴대폰 위치 사용", device.locationServices,
                 "휴대폰의 위치 사용이 켜져 있어야 근처를 감지할 수 있어요.", "위치 설정", onLocationSettings)
             if (!device.playServices) {

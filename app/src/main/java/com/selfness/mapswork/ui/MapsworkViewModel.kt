@@ -23,9 +23,15 @@ class MapsworkViewModel(application: Application) : AndroidViewModel(application
     val device = mutableDevice.asStateFlow()
     private val mutableMessages = MutableSharedFlow<String>(extraBufferCapacity = 1)
     val messages = mutableMessages.asSharedFlow()
-    private val updates = UpdateManager(File(application.cacheDir, "updates"), GitHubUpdateSource(),
+    private val updates = UpdateManager(File(application.cacheDir, "updates"), container.updateSource,
         BuildConfig.VERSION_CODE.toLong(), Build.VERSION.SDK_INT, ApkVerifier(application)::verify)
     val update = updates.status
+    val automaticUpdates = container.settings.automaticUpdates
+    fun setAutomaticUpdates(enabled: Boolean) {
+        container.settings.setAutomaticUpdates(enabled)
+        AutomaticUpdateWorker.schedule(getApplication(), enabled)
+        if (!enabled) container.updateNotifier.cancel()
+    }
     fun checkForUpdate() { viewModelScope.launch { updates.check() } }
     fun downloadUpdate() { viewModelScope.launch { updates.download() } }
     suspend fun installationFile(): File? = updates.installationFile()

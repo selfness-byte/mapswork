@@ -2,12 +2,14 @@ package com.selfness.mapswork.update
 
 import com.selfness.mapswork.core.UpdateRelease
 import com.selfness.mapswork.core.UpdateRules
+import com.selfness.mapswork.BuildConfig
 import java.io.File
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.*
@@ -20,7 +22,8 @@ interface UpdateSource {
 
 class UpdateProblem(message: String) : IOException(message)
 
-class GitHubUpdateSource : UpdateSource {
+class HttpUpdateSource(firebaseHostingSite: String = BuildConfig.FIREBASE_HOSTING_SITE) : UpdateSource {
+    private val manifestUrl = UpdateRules.manifestUrl(firebaseHostingSite)
     private val client = OkHttpClient.Builder()
         .followRedirects(false).followSslRedirects(false)
         .connectTimeout(15, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS)
@@ -28,9 +31,18 @@ class GitHubUpdateSource : UpdateSource {
     private val metadataClient = client.newBuilder().callTimeout(20, TimeUnit.SECONDS).build()
 
     override suspend fun fetchRelease(): UpdateRelease {
-        val request = request(UpdateRules.MANIFEST_URL)
+        return try { fetchReleaseAt(manifestUrl) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) {
+            if (manifestUrl == UpdateRules.MANIFEST_URL) throw error
+            fetchReleaseAt(UpdateRules.MANIFEST_URL)
+        }
+    }
+
+    private suspend fun fetchReleaseAt(url: String): UpdateRelease {
+        val request = request(url)
         metadataClient.response(request).use { response ->
-            if (!response.isSuccessful) throw UpdateProblem("GitHub 업데이트 정보를 읽지 못했어요. 인터넷 연결과 저장소 공개 여부를 확인해 주세요.")
+            if (!response.isSuccessful) throw UpdateProblem("업데이트 정보를 읽지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.")
             val body = response.body ?: throw IOException("Empty metadata")
             if (body.contentLength() > UpdateRules.MAX_MANIFEST_BYTES) throw IOException("Oversized metadata")
             val data = body.byteStream().use { input ->

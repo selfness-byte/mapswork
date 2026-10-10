@@ -21,6 +21,13 @@ object UpdateRules {
     private val versionPattern = Regex("[0-9]+\\.[0-9]+\\.[0-9]+")
     private val pathPattern = Regex("/selfness-byte/mapswork/(codex/nearby-shop-alert|[a-f0-9]{40})/downloads/mapswork-[0-9]+\\.[0-9]+\\.[0-9]+-test\\.apk")
 
+    fun manifestUrl(firebaseHostingSite: String): String {
+        val site = firebaseHostingSite.trim()
+        if (site.isEmpty()) return MANIFEST_URL
+        require(Regex("[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?").matches(site))
+        return "https://$site.web.app/updates/update.json"
+    }
+
     fun validate(release: UpdateRelease): UpdateRelease {
         require(release.versionCode > 0 && versionPattern.matches(release.versionName))
         require(release.minSdk >= 26 && release.notes.length <= 4_000)
@@ -45,4 +52,11 @@ object UpdateRules {
         installed.packageName == "com.selfness.mapswork" && artifact.packageName == installed.packageName &&
             artifact.versionCode == release.versionCode && artifact.versionCode > installed.versionCode &&
             installed.signerSha256.isNotEmpty() && artifact.signerSha256 == installed.signerSha256
+}
+
+object AutomaticUpdateRules {
+    const val INTERVAL_MILLIS = 24L * 60 * 60 * 1000
+    fun isDue(nowMillis: Long, lastCheckedAtMillis: Long): Boolean =
+        lastCheckedAtMillis <= 0 || nowMillis < lastCheckedAtMillis ||
+            nowMillis - lastCheckedAtMillis >= INTERVAL_MILLIS
 }

@@ -22,7 +22,7 @@ import com.selfness.mapswork.location.DeviceStateReader
 import kotlinx.coroutines.launch
 
 @Composable
-fun MapsworkApp(viewModel: MapsworkViewModel, incomingShopId: String?, onIncomingHandled: () -> Unit) {
+fun MapsworkApp(viewModel: MapsworkViewModel, incomingShopId: String?, incomingUpdate: Boolean = false, onIncomingHandled: () -> Unit) {
     val context = LocalContext.current
     val owner = LocalLifecycleOwner.current
     val shops by viewModel.shops.collectAsStateWithLifecycle()
@@ -30,6 +30,7 @@ fun MapsworkApp(viewModel: MapsworkViewModel, incomingShopId: String?, onIncomin
     val registration by viewModel.registration.collectAsStateWithLifecycle()
     val device by viewModel.device.collectAsStateWithLifecycle()
     val update by viewModel.update.collectAsStateWithLifecycle()
+    val automaticUpdates by viewModel.automaticUpdates.collectAsStateWithLifecycle()
     var screen by rememberSaveable { mutableStateOf("list") }
     var editingId by rememberSaveable { mutableStateOf<String?>(null) }
     var backgroundExplanation by remember { mutableStateOf(false) }
@@ -78,6 +79,13 @@ fun MapsworkApp(viewModel: MapsworkViewModel, incomingShopId: String?, onIncomin
             onIncomingHandled()
         }
     }
+    LaunchedEffect(incomingUpdate) {
+        if (incomingUpdate) {
+            screen = "settings"
+            viewModel.checkForUpdate()
+            onIncomingHandled()
+        }
+    }
     BackHandler(enabled = screen != "list") { screen = "list" }
 
     when (screen) {
@@ -102,6 +110,7 @@ fun MapsworkApp(viewModel: MapsworkViewModel, incomingShopId: String?, onIncomin
             onLocationSettings = { open(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)) },
             onAppSettings = { appSettings() }, onRefresh = viewModel::refreshDevice, snackbar = snackbar,
             update = update, onUpdateCheck = viewModel::checkForUpdate, onUpdateDownload = viewModel::downloadUpdate,
+            automaticUpdates = automaticUpdates, onAutomaticUpdates = viewModel::setAutomaticUpdates,
             onUpdateInstall = {
                 if (context.packageManager.canRequestPackageInstalls()) installUpdate()
                 else try {

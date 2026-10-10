@@ -1,5 +1,11 @@
 # 클라우드 환경 재사용
 
+## 이곳 0.3 Firebase 자동 확인
+
+Firebase 프로젝트는 `inanimals-1977`, 업데이트 전용 Hosting 사이트는 `inanimals-1977-mapswork`입니다. 기본 빌드 주소를 지정하고 24시간 간격 자동 확인·알림과 GitHub 대체 확인 경로를 구현했습니다. `MAPSWORK_FIREBASE_HOSTING_SITE`는 사이트 ID를 바꾸는 공개 빌드 설정입니다. 별도 Firebase SDK나 관리 인증을 APK에 넣지 않습니다.
+
+Firebase CLI·배포 인증과 GCP 실행 신원은 이 클라우드에 구성되어 있지 않습니다. 사이트 생성·배포는 아직 하지 않았습니다. 완료 ZIP의 Firebase 배포 파일과 [안내](FIREBASE_UPDATE_SETUP.ko.md)를 사용합니다. 공개 사이트 주소의 클라우드 확인을 위한 네트워크·시작 지침과 사이트 환경 설정은 초안 revision 9에 저장하고 다시 읽어 확인했습니다. 환경 설정에서 검토·저장한 뒤 게시해야 적용되며, 초안 저장만으로 현재 네트워크에 적용되지는 않습니다.
+
 ## 이곳 0.2 지도 연결
 
 Google Maps/Places SDK는 빌드·단위 시험을 통과했습니다. 사용자에게 Google API 키가 아직 없으므로 현재 APK의 앱 내부 지도·검색은 연결 대기입니다. 별도 Google 지도 앱/웹으로 검색·위치 보기를 제공합니다.

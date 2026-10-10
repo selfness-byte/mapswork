@@ -45,7 +45,7 @@ class MainActivitySmokeTest {
     @Test fun settingsExposeManualUpdateCheckAndCurrentVersion() {
         compose.onNodeWithContentDescription("설정").performClick()
         compose.onNodeWithText("업데이트").assertIsDisplayed()
-        compose.onNodeWithText("현재 버전 0.2.0").assertIsDisplayed()
+        compose.onNodeWithText("현재 버전 0.3.0").assertIsDisplayed()
         compose.onNodeWithText("업데이트 확인").assertIsDisplayed().assertHasClickAction()
     }
 
@@ -54,6 +54,20 @@ class MainActivitySmokeTest {
         compose.onNodeWithText("상점 이름 검색").assertIsDisplayed()
         compose.onNodeWithText("내 위치").assertIsDisplayed()
         compose.onNodeWithText("Google 지도 연결 대기").assertIsDisplayed()
+    }
+
+    @Test fun automaticUpdateChecksCanBeTurnedOffInSettings() {
+        compose.onNodeWithContentDescription("설정").performClick()
+        compose.onNodeWithContentDescription("새 버전 자동 확인").assertIsOn().performClick().assertIsOff()
+        val container = (compose.activity.application as MapsworkApplication).container
+        kotlin.test.assertFalse(container.settings.automaticUpdates.value)
+    }
+
+    @Test fun updateNotificationIntentOpensSettingsAfterRecreation() {
+        compose.activity.intent.putExtra(MainActivity.UPDATE_EXTRA, true)
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithText("업데이트").assertIsDisplayed()
+        compose.onNodeWithContentDescription("새 버전 자동 확인").assertIsDisplayed()
     }
 
     @Test fun savedPlaceAppearsInTheVisibleList() {

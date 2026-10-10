@@ -6,16 +6,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.selfness.mapswork.BuildConfig
 import com.selfness.mapswork.update.*
 
 @Composable
-fun UpdateCard(status: UpdateStatus, onCheck: () -> Unit, onDownload: () -> Unit, onInstall: () -> Unit) {
+fun UpdateCard(status: UpdateStatus, onCheck: () -> Unit, onDownload: () -> Unit, onInstall: () -> Unit,
+    automaticUpdates: Boolean, onAutomaticUpdates: (Boolean) -> Unit) {
     val busy = status.phase in listOf(UpdatePhase.CHECKING, UpdatePhase.DOWNLOADING)
     OutlinedCard {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("업데이트", style = MaterialTheme.typography.titleMedium)
             Text("현재 버전 ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodyMedium)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("새 버전 자동 확인", style = MaterialTheme.typography.bodyMedium)
+                    Text("하루에 한 번 확인하고 알려 드려요.", style = MaterialTheme.typography.bodySmall)
+                }
+                Switch(automaticUpdates, onCheckedChange = onAutomaticUpdates,
+                    modifier = Modifier.semantics { contentDescription = "새 버전 자동 확인" })
+            }
+            Text("다운로드와 설치는 확인 후 진행해요.", style = MaterialTheme.typography.bodySmall)
             Text(when (status.phase) {
                 UpdatePhase.IDLE -> "새 버전이 있는지 확인할 수 있어요."
                 UpdatePhase.CHECKING -> "새 버전을 확인하고 있어요."

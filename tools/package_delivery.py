@@ -11,6 +11,7 @@ import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
 import zipfile
+from prepare_firebase_hosting import prepare as prepare_firebase
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
@@ -92,7 +93,7 @@ def main():
             if forbidden.intersection(path.parts) or path.suffix in (".jks", ".keystore", ".pyc"):
                 raise RuntimeError(f"Excluded material in source ZIP: {name}")
 
-    for name in ("USER_GUIDE.ko.md", "GOOGLE_MAPS_SETUP.ko.md", "THIRD_PARTY_NOTICES.md"):
+    for name in ("USER_GUIDE.ko.md", "GOOGLE_MAPS_SETUP.ko.md", "FIREBASE_UPDATE_SETUP.ko.md", "THIRD_PARTY_NOTICES.md"):
         shutil.copyfile(ROOT / "docs" / name, DIST / name)
     shutil.copyfile(ROOT / "app/build/reports/lint-results-debug.html", DIST / "LINT_REPORT.html")
     report = {
@@ -105,7 +106,12 @@ def main():
         "minimum_android": 26, "target_android": 36, "abis": ["arm64-v8a", "armeabi-v7a"],
         "physical_android_device_tested": False,
         "google_maps_api_key_configured": google_maps_key_configured(),
-        "untested": ["native Google map rendering and Places responses", "Android APK update installer",
+        "firebase_hosting_site": firebase_hosting_site(),
+        "firebase_hosting_deployment_verified": False,
+        "github_update_fallback_enabled": True,
+        "automatic_update_check_interval_hours": 24,
+        "untested": ["live Firebase Hosting deployment", "physical-device scheduled update checks and notifications",
+                     "native Google map rendering and Places responses", "Android APK update installer",
                      "real Google Play geofence callbacks",
                      "locked/background notification delivery", "reboot/package replacement recovery"],
         "external_M_accessed": False,
@@ -118,8 +124,12 @@ def main():
                   apkUrl=f"https://raw.githubusercontent.com/selfness-byte/mapswork/codex/nearby-shop-alert/downloads/{apk.name}",
                   sha256=report["apk_sha256"], notes=notes)
     (DIST / "update.json").write_text(json.dumps(update, ensure_ascii=False, indent=2) + "\n")
-    delivered = [apk, source, *(DIST / name for name in
-        ("USER_GUIDE.ko.md", "GOOGLE_MAPS_SETUP.ko.md", "THIRD_PARTY_NOTICES.md", "LINT_REPORT.html",
+    firebase = prepare_firebase(DIST, DIST / "firebase-hosting", site=firebase_hosting_site() or "inanimals-1977-mapswork")
+    mac_saver = write_mac_saver(update)
+    with (DIST / "VERIFY_LOG.txt").open("a") as log:
+        run(["bash", "-n", mac_saver], log)
+    delivered = [apk, source, firebase, mac_saver, *(DIST / name for name in
+        ("USER_GUIDE.ko.md", "GOOGLE_MAPS_SETUP.ko.md", "FIREBASE_UPDATE_SETUP.ko.md", "THIRD_PARTY_NOTICES.md", "LINT_REPORT.html",
          "BUILD_REPORT.json", "VERIFY_LOG.txt", "update.json"))]
     checksums = DIST / "SHA256SUMS.txt"
     file_sums = "".join(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n"
@@ -151,6 +161,58 @@ def google_maps_key_configured():
             if line.strip().startswith("mapswork.googleMapsApiKey="):
                 return bool(line.split("=", 1)[1].strip())
     return False
+
+
+def firebase_hosting_site():
+    site = os.environ.get("MAPSWORK_FIREBASE_HOSTING_SITE")
+    if site is not None:
+        return site.strip()
+    properties = ROOT / "local.properties"
+    if properties.is_file():
+        for line in properties.read_text().splitlines():
+            if line.strip().startswith("mapswork.firebaseHostingSite="):
+                return line.split("=", 1)[1].strip()
+    return "inanimals-1977-mapswork"
+
+
+def write_mac_saver(update):
+    script = """#!/bin/bash
+set -euo pipefail
+if [[ "$(uname -s)" != "Darwin" ]]; then
+    echo "이 저장 도구는 Mac에서 실행하세요."
+    exit 1
+fi
+task_folder="$(osascript -e 'POSIX path of (choose folder with prompt "mapswork-github 폴더를 선택하세요")')"
+task_destination="$task_folder/mapswork-__VERSION__-test.apk"
+task_expected="__SHA256__"
+if [[ -e "$task_destination" ]]; then
+    if [[ "$(shasum -a 256 "$task_destination" | awk '{print $1}')" == "$task_expected" ]]; then
+        echo "이미 저장되어 있습니다: $task_destination"
+        exit 0
+    fi
+    echo "같은 이름의 다른 파일이 있습니다. 기존 파일을 보존하고 중단합니다."
+    exit 1
+fi
+task_download="$(mktemp /tmp/mapswork-apk.XXXXXX)"
+trap 'rm -f "$task_download"' EXIT
+curl --fail --silent --show-error --location "__APK_URL__" -o "$task_download"
+if [[ "$(shasum -a 256 "$task_download" | awk '{print $1}')" != "$task_expected" ]]; then
+    echo "APK 체크섬이 다릅니다. 저장하지 않았습니다."
+    exit 1
+fi
+cp -n "$task_download" "$task_destination"
+if [[ "$(shasum -a 256 "$task_destination" | awk '{print $1}')" != "$task_expected" ]]; then
+    echo "저장한 파일을 확인하지 못했습니다."
+    exit 1
+fi
+echo "APK 저장 완료: $task_destination"
+"""
+    script = script.replace("__VERSION__", update["versionName"]).replace("__SHA256__", update["sha256"])
+    script = script.replace("__APK_URL__", update["apkUrl"])
+    output = DIST / "save-apk-to-mac.command"
+    output.write_text(script)
+    output.chmod(0o755)
+    return output
 
 
 if __name__ == "__main__":

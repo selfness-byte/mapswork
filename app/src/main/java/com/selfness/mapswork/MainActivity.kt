@@ -15,19 +15,24 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 class MainActivity : ComponentActivity() {
     private val incomingShop = MutableStateFlow<String?>(null)
+    private val incomingUpdate = MutableStateFlow(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         incomingShop.value = intent.getStringExtra(SHOP_ID_EXTRA)
+        incomingUpdate.value = intent.getBooleanExtra(UPDATE_EXTRA, false)
         setContent {
             MapsworkTheme {
                 val target by incomingShop.collectAsStateWithLifecycle()
+                val showUpdate by incomingUpdate.collectAsStateWithLifecycle()
                 val factory = remember { ViewModelProvider.AndroidViewModelFactory(application) }
                 val model = viewModel<MapsworkViewModel>(factory = factory)
-                MapsworkApp(model, target) {
+                MapsworkApp(model, target, showUpdate) {
                     incomingShop.value = null
+                    incomingUpdate.value = false
                     intent.removeExtra(SHOP_ID_EXTRA)
+                    intent.removeExtra(UPDATE_EXTRA)
                 }
             }
         }
@@ -37,7 +42,11 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         incomingShop.value = intent.getStringExtra(SHOP_ID_EXTRA)
+        incomingUpdate.value = intent.getBooleanExtra(UPDATE_EXTRA, false)
     }
 
-    companion object { const val SHOP_ID_EXTRA = "shop_id" }
+    companion object {
+        const val SHOP_ID_EXTRA = "shop_id"
+        const val UPDATE_EXTRA = "open_updates"
+    }
 }

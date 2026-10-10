@@ -16,6 +16,15 @@ require(googleMapsKey.isEmpty() || Regex("[A-Za-z0-9_-]{20,200}").matches(google
     "Google Maps key must be supplied as a real Android API key, not a proxy placeholder."
 }
 
+val firebaseHostingSite = providers.environmentVariable("MAPSWORK_FIREBASE_HOSTING_SITE").orNull?.trim()
+    ?: Properties().apply {
+        val propertiesFile = rootProject.file("local.properties")
+        if (propertiesFile.isFile) propertiesFile.inputStream().use { load(it) }
+    }.getProperty("mapswork.firebaseHostingSite", "inanimals-1977-mapswork").trim()
+require(firebaseHostingSite.isEmpty() || Regex("[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?").matches(firebaseHostingSite)) {
+    "Firebase Hosting site must be a DNS label."
+}
+
 android {
     namespace = "com.selfness.mapswork"
     compileSdk = 36
@@ -24,10 +33,11 @@ android {
         applicationId = "com.selfness.mapswork"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 3
+        versionName = "0.3.0"
         resValue("string", "google_maps_api_key", googleMapsKey)
         buildConfigField("boolean", "HAS_GOOGLE_MAPS_KEY", googleMapsKey.isNotEmpty().toString())
+        buildConfigField("String", "FIREBASE_HOSTING_SITE", "\"$firebaseHostingSite\"")
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     }
     buildFeatures {

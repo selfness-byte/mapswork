@@ -85,7 +85,7 @@ def main():
     with zipfile.ZipFile(source) as bundle:
         if bundle.testzip():
             raise RuntimeError("Source ZIP integrity failure")
-        forbidden = {".git", ".gradle", "build", "dist", ".superpowers", "__pycache__", "local.properties"}
+        forbidden = {".git", ".gradle", "build", "dist", "downloads", ".superpowers", "__pycache__", "local.properties"}
         for name in bundle.namelist():
             path = Path(name)
             if forbidden.intersection(path.parts) or path.suffix in (".jks", ".keystore", ".pyc"):

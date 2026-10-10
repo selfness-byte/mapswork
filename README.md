@@ -18,7 +18,7 @@ Android 8.0 이상, Google Play 서비스가 있는 ARM 휴대폰이 필요합�
 
 [한국어 사용 안내서](docs/USER_GUIDE.ko.md)에서 설치, 권한, 상점 등록과 휴대폰 시험 순서를 확인하세요.
 
-완성 파일은 [GitHub 다운로드 폴더](downloads/README.md)에 있습니다.
+완성 파일은 [GitHub 다운로드 폴더](https://github.com/selfness-byte/mapswork/tree/codex/nearby-shop-alert/downloads)에 있습니다.
 
 - [APK·소스·안내서 전체 ZIP](https://github.com/selfness-byte/mapswork/raw/refs/heads/codex/nearby-shop-alert/downloads/mapswork-complete.zip)
 - [Android 설치용 APK](https://github.com/selfness-byte/mapswork/raw/refs/heads/codex/nearby-shop-alert/downloads/mapswork-0.1.0-test.apk)

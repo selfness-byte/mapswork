@@ -1,58 +1,77 @@
 package com.selfness.mapswork.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.gms.maps.*
+import com.google.android.gms.maps.model.*
+import com.selfness.mapswork.BuildConfig
 import com.selfness.mapswork.core.GeoPoint
-import org.maplibre.android.MapLibre
-import org.maplibre.android.camera.CameraPosition
-import org.maplibre.android.geometry.LatLng
-import org.maplibre.android.maps.*
-import org.maplibre.android.style.layers.CircleLayer
-import org.maplibre.android.style.layers.PropertyFactory.*
-import org.maplibre.android.style.sources.GeoJsonSource
-import org.maplibre.geojson.Feature
-import org.maplibre.geojson.FeatureCollection
-import org.maplibre.geojson.Point
-import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.delay
 
-private const val OSM_STYLE = """{
-  "version": 8,
-  "sources": {"osm": {"type": "raster", "tiles": ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-    "tileSize": 256, "maxzoom": 19, "attribution": "© OpenStreetMap contributors"}},
-  "layers": [{"id": "background", "type": "background", "paint": {"background-color": "#EAF1F5"}},
-    {"id": "osm", "type": "raster", "source": "osm"}]
-}"""
+private val DEFAULT_CENTER = GeoPoint(37.5665, 126.9780)
 
 @Composable
-fun ShopMap(point: GeoPoint?, onPointSelected: (GeoPoint) -> Unit, cameraTarget: GeoPoint?, modifier: Modifier = Modifier) {
+fun ShopMap(
+    point: GeoPoint?, onPointSelected: (GeoPoint) -> Unit, currentPoint: GeoPoint?,
+    cameraTarget: GeoPoint?, cameraRevision: Int, modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val servicesAvailable = remember(context) {
+        GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
+    }
+    if (!BuildConfig.HAS_GOOGLE_MAPS_KEY || !servicesAvailable) {
+        OutlinedCard(modifier) {
+            Column(Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally) {
+                Spacer(Modifier.weight(1f))
+                Text("Google 지도 연결 대기", style = MaterialTheme.typography.titleMedium)
+                Text("지금은 Google 지도 앱에서 위치를 볼 수 있어요. 지도 연결이 포함된 업데이트 후에는 이 화면에서 위치를 고를 수 있어요.",
+                    style = MaterialTheme.typography.bodySmall)
+                if (currentPoint != null) Text("내 위치를 확인했어요", color = MaterialTheme.colorScheme.primary)
+                OutlinedButton(onClick = { GoogleMapsLinks.open(context, GoogleMapsLinks.location(cameraTarget ?: point ?: currentPoint ?: DEFAULT_CENTER)) }) {
+                    Text("Google 지도에서 보기")
+                }
+                Spacer(Modifier.weight(1f))
+            }
+        }
+        return
+    }
+    var attempt by rememberSaveable { mutableIntStateOf(0) }
+    key(attempt) {
+        GoogleShopMap(point, onPointSelected, currentPoint, cameraTarget, cameraRevision, modifier) { attempt++ }
+    }
+}
+
+@Composable
+private fun GoogleShopMap(
+    point: GeoPoint?, onPointSelected: (GeoPoint) -> Unit, currentPoint: GeoPoint?,
+    cameraTarget: GeoPoint?, cameraRevision: Int, modifier: Modifier, onRetry: () -> Unit,
+) {
     val context = LocalContext.current
     val owner = LocalLifecycleOwner.current
-    val uriHandler = LocalUriHandler.current
-    val latestPoint by rememberUpdatedState(point)
     val latestSelect by rememberUpdatedState(onPointSelected)
-    val lifetime = remember { AtomicBoolean(true) }
+    val initialCenter = remember { cameraTarget ?: point ?: currentPoint ?: DEFAULT_CENTER }
     val mapView = remember {
-        MapLibre.getInstance(context)
-        MapTileClient.configure(context.applicationContext)
+        MapsInitializer.initialize(context.applicationContext, MapsInitializer.Renderer.LATEST, null)
         MapView(context).apply { onCreate(null) }
     }
-    var map by remember { mutableStateOf<MapLibreMap?>(null) }
-    var styleLoaded by remember { mutableStateOf(false) }
-    var loadingFailed by remember { mutableStateOf(false) }
-    var retry by remember { mutableIntStateOf(0) }
-    val failures by MapTileClient.failures.collectAsState()
-    var failureBaseline by remember { mutableLongStateOf(failures) }
+    var map by remember { mutableStateOf<GoogleMap?>(null) }
+    var loaded by remember { mutableStateOf(false) }
+    var failed by remember { mutableStateOf(false) }
+    var shopMarker by remember { mutableStateOf<Marker?>(null) }
+    var locationMarker by remember { mutableStateOf<Marker?>(null) }
 
     DisposableEffect(mapView, owner) {
         var alive = true
@@ -71,72 +90,58 @@ fun ShopMap(point: GeoPoint?, onPointSelected: (GeoPoint) -> Unit, cameraTarget:
                 else -> Unit
             }
         }
-        val failureListener = MapView.OnDidFailLoadingMapListener { if (alive) loadingFailed = true }
-        mapView.addOnDidFailLoadingMapListener(failureListener)
         owner.lifecycle.addObserver(observer)
+        if (owner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) resume()
+        else if (owner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) start()
         mapView.getMapAsync { ready ->
             if (alive) {
-                ready.uiSettings.isLogoEnabled = false
-                ready.uiSettings.isAttributionEnabled = false // Always-visible attribution below the map.
-                ready.setPrefetchZoomDelta(0)
-                val center = latestPoint ?: GeoPoint(37.5665, 126.9780)
-                ready.cameraPosition = CameraPosition.Builder().target(center.latLng()).zoom(if (latestPoint == null) 13.0 else 16.0).build()
-                ready.addOnMapClickListener { location ->
-                    if (alive) latestSelect(GeoPoint(location.latitude, location.longitude))
-                    true
-                }
+                ready.uiSettings.isZoomControlsEnabled = true
+                ready.uiSettings.isMyLocationButtonEnabled = false
+                ready.setOnMapClickListener { if (alive) latestSelect(GeoPoint(it.latitude, it.longitude)) }
+                ready.setOnPoiClickListener { if (alive) latestSelect(GeoPoint(it.latLng.latitude, it.latLng.longitude)) }
+                ready.setOnMapLoadedCallback { if (alive) { loaded = true; failed = false } }
+                ready.moveCamera(CameraUpdateFactory.newLatLngZoom(initialCenter.latLng(), if (point != null || currentPoint != null) 16f else 11f))
                 map = ready
             }
         }
         onDispose {
             alive = false
-            lifetime.set(false)
             owner.lifecycle.removeObserver(observer)
-            mapView.removeOnDidFailLoadingMapListener(failureListener)
-            stop()
-            mapView.onDestroy()
+            map?.apply { setOnMapClickListener(null); setOnPoiClickListener(null); setOnMapLoadedCallback(null) }
+            stop(); mapView.onDestroy()
         }
     }
-
-    LaunchedEffect(map, retry) {
-        val ready = map ?: return@LaunchedEffect
-        styleLoaded = false
-        ready.setStyle(Style.Builder().fromJson(OSM_STYLE)) { style ->
-            if (!lifetime.get()) return@setStyle
-            style.addSource(GeoJsonSource("selected-location", FeatureCollection.fromFeatures(emptyList())))
-            style.addLayer(CircleLayer("selected-location-marker", "selected-location").withProperties(
-                circleRadius(9f), circleColor("#155E75"), circleStrokeColor("#FFFFFF"), circleStrokeWidth(3f),
-            ))
-            latestPoint?.let { updatePoint(style, it) }
-            styleLoaded = true
-        }
+    LaunchedEffect(loaded) {
+        if (!loaded) { delay(20_000); if (!loaded) failed = true }
     }
-    LaunchedEffect(point, styleLoaded) {
-        if (styleLoaded) map?.style?.let { updatePoint(it, point) }
-    }
-    LaunchedEffect(cameraTarget, map) {
-        cameraTarget?.let { map?.cameraPosition = CameraPosition.Builder().target(it.latLng()).zoom(16.0).build() }
-    }
-    Column(modifier) {
-        Box(Modifier.fillMaxWidth().weight(1f)) {
-            AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize())
-            if (loadingFailed || failures > failureBaseline) {
-                Card(Modifier.align(Alignment.TopCenter).padding(8.dp)) {
-                    Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text("지도를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
-                        TextButton(onClick = { loadingFailed = false; failureBaseline = failures; retry++ }) { Text("재시도") }
-                    }
-                }
+    LaunchedEffect(map, point, currentPoint) {
+        map?.let { ready ->
+            shopMarker?.remove(); locationMarker?.remove()
+            locationMarker = currentPoint?.let {
+                ready.addMarker(MarkerOptions().position(it.latLng()).title("내 위치")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)).zIndex(1f))
+            }
+            shopMarker = point?.let {
+                ready.addMarker(MarkerOptions().position(it.latLng()).title("상점 위치").zIndex(2f))
             }
         }
-        Text("© OpenStreetMap contributors", style = MaterialTheme.typography.labelSmall,
-            modifier = Modifier.fillMaxWidth().clickable { uriHandler.openUri("https://www.openstreetmap.org/copyright") }.padding(8.dp))
+    }
+    LaunchedEffect(map, cameraTarget, cameraRevision) {
+        cameraTarget?.let { map?.animateCamera(CameraUpdateFactory.newLatLngZoom(it.latLng(), 16f)) }
+    }
+    Box(modifier) {
+        AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize())
+        Surface(Modifier.align(Alignment.TopStart).padding(8.dp), shape = MaterialTheme.shapes.small) {
+            Text("파랑: 내 위치 · 빨강: 상점", Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
+        }
+        if (!loaded && !failed) CircularProgressIndicator(Modifier.align(Alignment.Center))
+        if (failed) Surface(Modifier.align(Alignment.Center).padding(16.dp), shape = MaterialTheme.shapes.medium) {
+            Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("지도를 표시하지 못했어요. 인터넷 연결과 지도 설정을 확인해 주세요.", style = MaterialTheme.typography.bodySmall)
+                TextButton(onClick = onRetry) { Text("지도 다시 열기") }
+            }
+        }
     }
 }
 
-private fun GeoPoint.latLng() = LatLng(latitude.coerceIn(-85.0511, 85.0511), longitude)
-
-private fun updatePoint(style: Style, point: GeoPoint?) {
-    val features = point?.let { listOf(Feature.fromGeometry(Point.fromLngLat(it.longitude, it.latitude))) } ?: emptyList()
-    style.getSourceAs<GeoJsonSource>("selected-location")?.setGeoJson(FeatureCollection.fromFeatures(features))
-}
+private fun GeoPoint.latLng() = LatLng(latitude, longitude)

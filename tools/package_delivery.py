@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -13,7 +14,9 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
-VERSION = "0.1.0"
+APP_GRADLE = (ROOT / "app/build.gradle.kts").read_text()
+VERSION = re.search(r'versionName\s*=\s*"([^"]+)"', APP_GRADLE).group(1)
+VERSION_CODE = int(re.search(r'versionCode\s*=\s*(\d+)', APP_GRADLE).group(1))
 
 
 def git(*args):
@@ -53,8 +56,6 @@ def native_alignment(apk, log):
                 raise RuntimeError(f"Native library is not 16KB aligned: {name}")
             alignments[name] = values
             log.write(f"ELF LOAD alignment {name}: {values}\n")
-    if not alignments:
-        raise RuntimeError("APK is missing ARM64 native libraries")
     return alignments
 
 
@@ -91,24 +92,35 @@ def main():
             if forbidden.intersection(path.parts) or path.suffix in (".jks", ".keystore", ".pyc"):
                 raise RuntimeError(f"Excluded material in source ZIP: {name}")
 
-    for name in ("USER_GUIDE.ko.md", "THIRD_PARTY_NOTICES.md"):
+    for name in ("USER_GUIDE.ko.md", "GOOGLE_MAPS_SETUP.ko.md", "THIRD_PARTY_NOTICES.md"):
         shutil.copyfile(ROOT / "docs" / name, DIST / name)
     shutil.copyfile(ROOT / "app/build/reports/lint-results-debug.html", DIST / "LINT_REPORT.html")
     report = {
-        "app": "Mapswork — 가까운 상점", "version": VERSION, "kind": "personal-device debug test APK",
+        "app": "이곳 — Mapswork", "version": VERSION, "version_code": VERSION_CODE,
+        "kind": "personal-device debug test APK",
         "built_at_utc": datetime.now(timezone.utc).isoformat(), "source_commit": git("rev-parse", "HEAD"),
         "tests": tests, "lint": issues, "apk_signature_verified": True,
         "apk_zip_16kb_alignment_verified": True, "arm64_elf_load_alignment": alignments,
         "apk_bytes": apk.stat().st_size, "apk_sha256": hashlib.sha256(apk.read_bytes()).hexdigest(),
         "minimum_android": 26, "target_android": 36, "abis": ["arm64-v8a", "armeabi-v7a"],
         "physical_android_device_tested": False,
-        "untested": ["native map rendering", "real Google Play geofence callbacks",
+        "google_maps_api_key_configured": google_maps_key_configured(),
+        "untested": ["native Google map rendering and Places responses", "Android APK update installer",
+                     "real Google Play geofence callbacks",
                      "locked/background notification delivery", "reboot/package replacement recovery"],
         "external_M_accessed": False,
     }
     (DIST / "BUILD_REPORT.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+    notes = (ROOT / "docs/RELEASE_NOTES.ko.md").read_text().strip()
+    if not re.fullmatch(r"\d+\.\d+\.\d+", VERSION) or len(notes) > 4000:
+        raise RuntimeError("Update metadata requires a numeric version and release notes up to 4000 characters")
+    update = dict(versionCode=VERSION_CODE, versionName=VERSION, minSdk=26,
+                  apkUrl=f"https://raw.githubusercontent.com/selfness-byte/mapswork/codex/nearby-shop-alert/downloads/{apk.name}",
+                  sha256=report["apk_sha256"], notes=notes)
+    (DIST / "update.json").write_text(json.dumps(update, ensure_ascii=False, indent=2) + "\n")
     delivered = [apk, source, *(DIST / name for name in
-        ("USER_GUIDE.ko.md", "THIRD_PARTY_NOTICES.md", "LINT_REPORT.html", "BUILD_REPORT.json", "VERIFY_LOG.txt"))]
+        ("USER_GUIDE.ko.md", "GOOGLE_MAPS_SETUP.ko.md", "THIRD_PARTY_NOTICES.md", "LINT_REPORT.html",
+         "BUILD_REPORT.json", "VERIFY_LOG.txt", "update.json"))]
     checksums = DIST / "SHA256SUMS.txt"
     file_sums = "".join(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n"
                         for path in sorted(delivered))
@@ -127,6 +139,18 @@ def main():
     print(f"Verified {sum(t['tests'] for t in tests.values())} tests; delivery ready: {DIST}")
     for path in sorted(delivered):
         print(f"{path.name}: {path.stat().st_size:,} bytes")
+
+
+def google_maps_key_configured():
+    key = os.environ.get("MAPSWORK_GOOGLE_MAPS_API_KEY")
+    if key is not None:
+        return bool(key.strip())
+    properties = ROOT / "local.properties"
+    if properties.is_file():
+        for line in properties.read_text().splitlines():
+            if line.strip().startswith("mapswork.googleMapsApiKey="):
+                return bool(line.split("=", 1)[1].strip())
+    return False
 
 
 if __name__ == "__main__":

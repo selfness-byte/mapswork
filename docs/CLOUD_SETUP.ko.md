@@ -1,5 +1,11 @@
 # 클라우드 환경 재사용
 
+## 이곳 0.2 지도 연결
+
+Google Maps/Places SDK는 빌드·단위 시험을 통과했습니다. 사용자에게 Google API 키가 아직 없으므로 현재 APK의 앱 내부 지도·검색은 연결 대기입니다. 별도 Google 지도 앱/웹으로 검색·위치 보기를 제공합니다.
+
+환경 초안에 `MAPSWORK_GOOGLE_MAPS_API_KEY` 환경 변수 요구사항과 Google 연결·서명 유지·GitHub 업데이트 게시 절차를 포함한 `start_skill`을 저장했습니다. 키 값은 저장하지 않았습니다. 환경 설정에 실제 Android API 키를 입력하고 설정을 적용한 뒤 새 버전으로 빌드해야 합니다. 초안 저장은 실행 환경 적용이나 게시를 뜻하지 않습니다. [설정 안내](GOOGLE_MAPS_SETUP.ko.md)를 따릅니다.
+
 현재 작업 경로는 `/workspace/mapswork`입니다. Android 개발·빌드 캐시는 클라우드 안에 있으며 Mac 외장하드 M과 연결되어 있지 않습니다.
 
 ## 설치 스크립트

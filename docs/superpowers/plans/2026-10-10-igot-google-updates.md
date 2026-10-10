@@ -1,6 +1,6 @@
 # 이곳 Google 지도·업데이트 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 이름·설정 진입을 개선하고 GitHub APK 업데이트 및 Google 지도·장소 검색을 제공한다.
 
@@ -31,32 +31,32 @@
 
 **Interfaces:** `UpdateRelease(versionCode, versionName, minSdk, apkUrl, sha256, notes)`; `UpdateRules.availability(release, installedCode, sdk)`; `UpdateSource.fetchRelease()` / `download(release, file, onProgress)`; `UpdateManager.status`, `check()`, `download()`, `installationFile()`.
 
-- [ ] 写 UpdateRulesTest：版本、SDK、HTTPS/本仓库 URL、SHA 和 APK 身份拒绝/允许。
-- [ ] 跑 `tools/cloud-gradle.sh :core:test`，观察规则缺失失败；实现规则再运行通过。
-- [ ] 写 UpdateManagerTest：完整文件、错误 SHA、失败文件删除、签名拒绝、重试和安装前再检查；先运行看到失败。
-- [ ] 实现受限网络源、下载管理、Android APK 验证、FileProvider 和用户确认安装。
-- [ ] 更新名称、大设置按钮、设置更新卡。调整现有真实 Compose 测试并先观察屏幕测试失败。
-- [ ] 跑 `:core:test :app:testDebugUnitTest` 并提交。
+- [x] UpdateRulesTest 작성: 버전, SDK, 이 저장소의 HTTPS URL, SHA, APK 식별 검증.
+- [x] `tools/cloud-gradle.sh :core:test`로 규칙 누락 실패 확인, 구현 후 통과 확인.
+- [x] UpdateManagerTest 작성: 완전한 파일, 잘못된 SHA, 실패 파일 삭제, 서명 거부, 재시도, 설치 전 재검증. 먼저 실패 확인.
+- [x] 네트워크 제한, 다운로드 관리, Android APK 검증, FileProvider, 사용자 설치 확인 구현.
+- [x] 이름·큰 설정 버튼·업데이트 카드 변경. 기존 Compose 테스트를 바꾸고 먼저 실패 확인.
+- [x] `:core:test :app:testDebugUnitTest` 통과 후 커밋.
 
 ### Task 2: Google 지도와 상점 검색
 
 **Files:** app/build.gradle.kts, AndroidManifest.xml, ui/{ShopMap,ShopEditorScreen,GooglePlaceSearch,GoogleMapsLinks}.kt, docs/GOOGLE_MAPS_SETUP.ko.md.
 
-**Interfaces:** `ShopMap(point, onPointSelected, currentPoint, cameraTarget, cameraRevision, modifier)`；`GooglePlaceSearch.intent(context, query, bias)` / `selection(context, resultIntent)`，返回 `SelectedPlace(name, point)`。
+**Interfaces:** `ShopMap(point, onPointSelected, currentPoint, cameraTarget, cameraRevision, modifier)`; `GooglePlaceSearch.intent(context, query, bias)` / `selection(context, resultIntent)`, 결과 `SelectedPlace(name, point)`.
 
-- [ ] 写 Google 地图链接测试：店名转义、GPS 点、浏览器回退；写 PlaceSelection 测试：无坐标拒绝/有效坐标选中。
-- [ ] 先运行看到失败，实现最小辅助代码。
-- [ ] 配置安全的构建 key 源，替换 MapLibre 为 Google SDK，实现生命周期和蓝色当前位置标记。
-- [ ] 搜索按钮打开官方 Places UI，选择后填入名称/位置；取消和错误保持草稿。
-- [ ] 无 key 显示等待并打开 Google 地图应用/网页。当前位置仍可明确选为店铺位置。
-- [ ] 跑所有测试、assembleDebug、lintDebug，写 key/计费/签名操作说明，提交。
+- [x] Google 지도 링크 테스트: 이름 인코딩, GPS 위치, 웹 대체 경로. 장소 선택 테스트: 좌표 없는 결과 거부, 유효한 장소 선택.
+- [x] 먼저 테스트 실패를 확인하고 보조 코드 구현.
+- [x] 빌드 키 입력 경로 설정, MapLibre를 Google SDK로 교체, 지도 수명과 파란 현재 위치 마커 구현.
+- [x] 검색 버튼으로 공식 Places 화면 열기, 선택 후 이름·위치 채우기. 취소·오류는 초안 유지.
+- [x] 키가 없으면 연결 대기와 Google 지도 앱/웹 열기 제공. 현재 위치를 명시적으로 상점 위치로 선택 가능.
+- [x] 전체 테스트·assembleDebug·lintDebug 실행. 키·비용·서명 안내서 작성 후 커밋.
 
-### Task 3: 审查和 GitHub 交付
+### Task 3: 검토와 GitHub 전달
 
-**Files:** tools/package_delivery.py, README.md, docs/{USER_GUIDE.ko,VALIDATION.ko,THIRD_PARTY_NOTICES}.md, downloads/{README.md,update.json,APK,ZIP,SHA256SUMS.txt}。
+**Files:** tools/package_delivery.py, README.md, docs/{USER_GUIDE.ko,VALIDATION.ko,THIRD_PARTY_NOTICES}.md, downloads/{README.md,update.json,APK,ZIP,SHA256SUMS.txt}.
 
-- [ ] 一位全新上下文审查代理检查本次变更，处理 Important/Critical 的问题并测试。
-- [ ] 更新交付脚本版本与没有原生库的合法 APK 检查；运行完整验证、提交代码。
-- [ ] 从已提交源码打包 0.2.0 APK/ZIP；确认旧 APK 与新 APK 的签名相同。
-- [ ] 从 APK 生成 SHA-256 更新元数据，检查包内容/摘要后提交交付文件并 push 已授权的分支。
-- [ ] 回读 GitHub 更新文件，验证版本/摘要与交付 APK 一致；报告 API key 和实机尚需验证。
+- [ ] 새 맥락의 최종 검토 담당 한 명이 변경을 확인. Important/Critical 수정과 테스트.
+- [ ] 패키징 버전 갱신, 네이티브 라이브러리가 없는 정상 APK 허용. 전체 검증 후 소스 커밋.
+- [ ] 커밋 소스에서 0.2.0 APK/ZIP 생성. 기존 APK와 서명이 같은지 확인.
+- [ ] APK SHA-256으로 업데이트 메타데이터 생성. 파일·체크섬 확인 후 전달 파일 커밋, 승인된 브랜치 push.
+- [ ] GitHub 업데이트 파일을 다시 읽어 버전·해시 일치 확인. API 키와 실기기 확인 필요 사항 보고.

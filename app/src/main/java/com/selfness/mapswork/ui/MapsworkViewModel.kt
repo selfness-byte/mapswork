@@ -5,8 +5,12 @@ import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.selfness.mapswork.MapsworkApplication
+import com.selfness.mapswork.BuildConfig
 import com.selfness.mapswork.core.*
 import com.selfness.mapswork.location.*
+import com.selfness.mapswork.update.*
+import java.io.File
+import android.os.Build
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -19,6 +23,12 @@ class MapsworkViewModel(application: Application) : AndroidViewModel(application
     val device = mutableDevice.asStateFlow()
     private val mutableMessages = MutableSharedFlow<String>(extraBufferCapacity = 1)
     val messages = mutableMessages.asSharedFlow()
+    private val updates = UpdateManager(File(application.cacheDir, "updates"), GitHubUpdateSource(),
+        BuildConfig.VERSION_CODE.toLong(), Build.VERSION.SDK_INT, ApkVerifier(application)::verify)
+    val update = updates.status
+    fun checkForUpdate() { viewModelScope.launch { updates.check() } }
+    fun downloadUpdate() { viewModelScope.launch { updates.download() } }
+    suspend fun installationFile(): File? = updates.installationFile()
 
     private fun synchronize(force: Boolean = false) {
         container.registrar.invalidate()

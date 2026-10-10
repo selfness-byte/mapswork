@@ -2,53 +2,21 @@
 
 ## Map and location providers
 
-Map data © OpenStreetMap contributors, available under the Open Database License (ODbL):
-https://www.openstreetmap.org/copyright
+Google Maps SDK for Android 19.2.0 and Places SDK for Android 4.3.1:
+https://developers.google.com/maps/documentation/android-sdk/overview
+https://developers.google.com/maps/documentation/places/android-sdk/overview
+https://cloud.google.com/maps-platform/terms
 
-Standard tiles: https://tile.openstreetmap.org/
-Policy: https://operations.osmfoundation.org/policies/tiles/
-
-MapLibre Native Android 11.11.0: https://github.com/maplibre/maplibre-native
-License source: https://github.com/maplibre/maplibre-native/blob/main/LICENSE.md
-
-AndroidX (Compose, Room, WorkManager, Activity, Lifecycle, Core), Kotlin and
-kotlinx.coroutines, and OkHttp are distributed under Apache License 2.0.
-Their individual upstream artifacts retain their own copyright notices.
-Google Play services Location 21.3.0 is used under Google's applicable SDK terms:
+Google Play services Location 21.3.0:
 https://developers.google.com/android/guides/overview
 
-## MapLibre license
+Google Maps and the official Places search UI retain their built-in attribution.
+The current no-key build can open the Google Maps application or website.
 
-BSD 2-Clause License
-
-Copyright (c) 2021 MapLibre contributors
-
-Copyright (c) 2018-2021 MapTiler.com
-
-Copyright (c) 2014-2020 Mapbox
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-* Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in
-  the documentation and/or other materials provided with the
-  distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
-CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+AndroidX (Compose, Room, WorkManager, Activity, Lifecycle, Core), Kotlin,
+kotlinx.coroutines, Material Components for Android 1.12.0, and OkHttp
+are distributed under Apache License 2.0. Their upstream artifacts retain
+their own copyright notices. MapLibre and OSM tiles were removed in 0.2.0.
 
 ## Apache License 2.0
 

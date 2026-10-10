@@ -9,6 +9,7 @@ import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -28,6 +29,7 @@ fun MapsworkApp(viewModel: MapsworkViewModel, incomingShopId: String?, onIncomin
     val enabled by viewModel.alertsEnabled.collectAsStateWithLifecycle()
     val registration by viewModel.registration.collectAsStateWithLifecycle()
     val device by viewModel.device.collectAsStateWithLifecycle()
+    val update by viewModel.update.collectAsStateWithLifecycle()
     var screen by rememberSaveable { mutableStateOf("list") }
     var editingId by rememberSaveable { mutableStateOf<String?>(null) }
     var backgroundExplanation by remember { mutableStateOf(false) }
@@ -39,6 +41,21 @@ fun MapsworkApp(viewModel: MapsworkViewModel, incomingShopId: String?, onIncomin
         catch (_: ActivityNotFoundException) { message("설정 화면을 열지 못했어요. 휴대폰 설정에서 이 앱을 찾아 주세요.") }
     }
     fun appSettings() = open(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}")))
+    fun installUpdate() {
+        scope.launch {
+            val file = viewModel.installationFile() ?: return@launch
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.updates", file)
+            try {
+                context.startActivity(Intent(Intent.ACTION_VIEW).setDataAndType(uri, "application/vnd.android.package-archive")
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION))
+            } catch (_: ActivityNotFoundException) { message("설치 화면을 열지 못했어요. 휴대폰의 앱 설치 설정을 확인해 주세요.") }
+            catch (_: SecurityException) { message("업데이트 설치가 허용되지 않았어요. 휴대폰의 앱 설치 설정을 확인해 주세요.") }
+        }
+    }
+    val installPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (context.packageManager.canRequestPackageInstalls()) installUpdate()
+        else message("업데이트를 설치하려면 ‘이 출처 허용’을 켜 주세요.")
+    }
 
     val locationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { viewModel.refreshDevice() }
     val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { viewModel.refreshDevice() }
@@ -83,7 +100,14 @@ fun MapsworkApp(viewModel: MapsworkViewModel, incomingShopId: String?, onIncomin
                 } else open(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName))
             },
             onLocationSettings = { open(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)) },
-            onAppSettings = { appSettings() }, onRefresh = viewModel::refreshDevice, snackbar = snackbar)
+            onAppSettings = { appSettings() }, onRefresh = viewModel::refreshDevice, snackbar = snackbar,
+            update = update, onUpdateCheck = viewModel::checkForUpdate, onUpdateDownload = viewModel::downloadUpdate,
+            onUpdateInstall = {
+                if (context.packageManager.canRequestPackageInstalls()) installUpdate()
+                else try {
+                    installPermissionLauncher.launch(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${context.packageName}")))
+                } catch (_: ActivityNotFoundException) { message("휴대폰 설정에서 이 앱의 ‘알 수 없는 앱 설치’를 허용해 주세요.") }
+            })
         else -> ShopListScreen(shops, enabled, registration,
             onAdd = { editingId = null; screen = "edit" }, onEdit = { editingId = it; screen = "edit" },
             onSettings = { screen = "settings" }, onToggle = viewModel::setShopEnabled, snackbar = snackbar)

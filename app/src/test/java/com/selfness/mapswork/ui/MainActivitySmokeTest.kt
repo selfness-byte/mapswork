@@ -32,14 +32,28 @@ class MainActivitySmokeTest {
 
     @Test fun initialLaunchShowsNameAndRegistrationAction() {
         shadowOf(Looper.getMainLooper()).idle()
-        compose.onNodeWithText("가까운 상점").assertIsDisplayed()
+        compose.onNodeWithText("이곳").assertIsDisplayed()
         compose.onNodeWithContentDescription("상점 추가").assertIsDisplayed().assertHasClickAction()
     }
 
     @Test fun settingsCanBeOpenedFromTheList() {
-        compose.onNodeWithContentDescription("알림 설정").performClick()
+        compose.onNodeWithContentDescription("설정").performClick()
         compose.onNodeWithText("근처 알림 사용").assertIsDisplayed()
-        compose.onNodeWithText("정확한 위치").assertIsDisplayed()
+        compose.onNodeWithText("정확한 위치").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test fun settingsExposeManualUpdateCheckAndCurrentVersion() {
+        compose.onNodeWithContentDescription("설정").performClick()
+        compose.onNodeWithText("업데이트").assertIsDisplayed()
+        compose.onNodeWithText("현재 버전 0.2.0").assertIsDisplayed()
+        compose.onNodeWithText("업데이트 확인").assertIsDisplayed().assertHasClickAction()
+    }
+
+    @Test fun shopEditorProvidesNameSearchAndExplicitGoogleMapConnectionState() {
+        compose.onNodeWithContentDescription("상점 추가").performClick()
+        compose.onNodeWithText("상점 이름 검색").assertIsDisplayed()
+        compose.onNodeWithText("내 위치").assertIsDisplayed()
+        compose.onNodeWithText("Google 지도 연결 대기").assertIsDisplayed()
     }
 
     @Test fun savedPlaceAppearsInTheVisibleList() {

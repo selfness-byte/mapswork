@@ -7,15 +7,17 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <application
         android:name=".MapsworkApplication"
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:label="가까운 상점"
+        android:label="이곳"
         android:theme="@style/Theme.Mapswork"
         android:icon="@mipmap/ic_launcher"
         android:supportsRtl="true">
+        <meta-data android:name="com.google.android.geo.API_KEY" android:value="@string/google_maps_api_key" />
         <activity android:name=".MainActivity" android:exported="true"
             android:launchMode="singleTop" android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -24,6 +26,11 @@
             </intent-filter>
         </activity>
         <receiver android:name=".location.GeofenceReceiver" android:exported="false" />
+        <provider android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.updates" android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/update_paths" />
+        </provider>
         <receiver android:name=".location.RestoreReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

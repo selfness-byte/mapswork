@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.selfness.mapswork.core.DeviceState
 import com.selfness.mapswork.location.*
+import com.selfness.mapswork.update.UpdateStatus
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -19,12 +20,14 @@ fun SettingsScreen(
     onBack: () -> Unit, onEnable: (Boolean) -> Unit, onLocation: () -> Unit,
     onBackground: () -> Unit, onNotifications: () -> Unit, onLocationSettings: () -> Unit,
     onAppSettings: () -> Unit, onRefresh: () -> Unit, snackbar: SnackbarHostState,
+    update: UpdateStatus, onUpdateCheck: () -> Unit, onUpdateDownload: () -> Unit, onUpdateInstall: () -> Unit,
 ) {
-    Scaffold(topBar = { TopAppBar(title = { Text("알림 설정") }, navigationIcon = {
+    Scaffold(topBar = { TopAppBar(title = { Text("설정") }, navigationIcon = {
         IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "목록으로") }
     }) }, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            UpdateCard(update, onUpdateCheck, onUpdateDownload, onUpdateInstall)
             Card {
                 Row(Modifier.padding(16.dp)) {
                     Column(Modifier.weight(1f)) {

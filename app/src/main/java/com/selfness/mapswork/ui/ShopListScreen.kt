@@ -26,8 +26,13 @@ fun ShopListScreen(
 ) {
     val displayedStatus = if (alertsEnabled) status else RegistrationStatus(RegistrationPhase.PAUSED)
     Scaffold(
-        topBar = { TopAppBar(title = { Text("가까운 상점", fontWeight = FontWeight.Bold) }, actions = {
-            IconButton(onClick = onSettings) { Icon(Icons.Default.Settings, contentDescription = "알림 설정") }
+        topBar = { TopAppBar(title = { Text("이곳", fontWeight = FontWeight.Bold) }, actions = {
+            FilledTonalButton(onClick = onSettings,
+                modifier = Modifier.padding(end = 12.dp).heightIn(min = 56.dp).semantics { contentDescription = "설정" }) {
+                Icon(Icons.Default.Settings, null, Modifier.size(28.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("설정", style = MaterialTheme.typography.titleMedium)
+            }
         }) },
         floatingActionButton = { ExtendedFloatingActionButton(onClick = onAdd,
             modifier = Modifier.semantics { contentDescription = "상점 추가" },

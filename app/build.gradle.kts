@@ -1,8 +1,19 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     kotlin("android")
     kotlin("plugin.compose")
     id("com.google.devtools.ksp")
+}
+
+val googleMapsKey = providers.environmentVariable("MAPSWORK_GOOGLE_MAPS_API_KEY").orNull?.trim()
+    ?: Properties().apply {
+        val propertiesFile = rootProject.file("local.properties")
+        if (propertiesFile.isFile) propertiesFile.inputStream().use { load(it) }
+    }.getProperty("mapswork.googleMapsApiKey", "").trim()
+require(googleMapsKey.isEmpty() || Regex("[A-Za-z0-9_-]{20,200}").matches(googleMapsKey)) {
+    "Google Maps key must be supplied as a real Android API key, not a proxy placeholder."
 }
 
 android {
@@ -13,8 +24,10 @@ android {
         applicationId = "com.selfness.mapswork"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
+        resValue("string", "google_maps_api_key", googleMapsKey)
+        buildConfigField("boolean", "HAS_GOOGLE_MAPS_KEY", googleMapsKey.isNotEmpty().toString())
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     }
     buildFeatures {
@@ -53,7 +66,9 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.10.1")
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
-    implementation("org.maplibre.gl:android-sdk:11.11.0")
+    implementation("com.google.android.gms:play-services-maps:19.2.0")
+    implementation("com.google.android.libraries.places:places:4.3.1")
+    implementation("com.google.android.material:material:1.12.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     testImplementation("junit:junit:4.13.2")
     testImplementation(kotlin("test-junit"))

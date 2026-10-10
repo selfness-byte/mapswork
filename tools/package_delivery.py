@@ -109,8 +109,21 @@ def main():
     (DIST / "BUILD_REPORT.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
     delivered = [apk, source, *(DIST / name for name in
         ("USER_GUIDE.ko.md", "THIRD_PARTY_NOTICES.md", "LINT_REPORT.html", "BUILD_REPORT.json", "VERIFY_LOG.txt"))]
-    (DIST / "SHA256SUMS.txt").write_text("".join(
-        f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n" for path in sorted(delivered)))
+    checksums = DIST / "SHA256SUMS.txt"
+    file_sums = "".join(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n"
+                        for path in sorted(delivered))
+    checksums.write_text(file_sums)
+    completed = DIST / "mapswork-complete.zip"
+    with zipfile.ZipFile(completed, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as bundle:
+        for path in [*delivered, checksums]:
+            bundle.write(path, arcname=path.name)
+    with zipfile.ZipFile(completed) as bundle:
+        if bundle.testzip():
+            raise RuntimeError("Completed-files ZIP integrity failure")
+    # The checksum inside the bundle covers its contents; the external list also
+    # covers the bundle itself without creating a self-referential checksum.
+    checksums.write_text(file_sums + f"{hashlib.sha256(completed.read_bytes()).hexdigest()}  {completed.name}\n")
+    delivered += [completed, checksums]
     print(f"Verified {sum(t['tests'] for t in tests.values())} tests; delivery ready: {DIST}")
     for path in sorted(delivered):
         print(f"{path.name}: {path.stat().st_size:,} bytes")

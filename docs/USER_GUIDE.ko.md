@@ -74,6 +74,8 @@ Google Play 서비스의 시스템 근접 감지를 사용합니다. 도착과 �
 
 클라우드는 Mac의 M에 직접 접근하지 않습니다. 완성 파일을 **다운로드한 뒤** Finder에서 **M → 공통작업 → mapswork**로 옮깁니다.
 
+**`mapswork-complete.zip` 하나를 받으면 아래 파일이 모두 들어 있습니다.** 보관할 때는 ZIP 그대로 두고, 설치할 때 필요한 파일을 꺼내도 됩니다.
+
 - `mapswork-0.1.0-test.apk`: 설치용
 - `mapswork-source.zip`: 완료한 소스·문서
 - `USER_GUIDE.ko.md`: 이 안내서

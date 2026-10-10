@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.Mapswork" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:colorAccent">#155E75</item>
+    </style>
+    <color name="launcher_background">#155E75</color>
+</resources>

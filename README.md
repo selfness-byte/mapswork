@@ -18,7 +18,12 @@ Android 8.0 이상, Google Play 서비스가 있는 ARM 휴대폰이 필요합�
 
 [한국어 사용 안내서](docs/USER_GUIDE.ko.md)에서 설치, 권한, 상점 등록과 휴대폰 시험 순서를 확인하세요.
 
-개발과 빌드는 클라우드에서 합니다. `dist/mapswork-complete.zip` 하나를 다운로드한 뒤 Mac의 **M → 공통작업 → mapswork**에 보관하세요. APK·소스·안내서·검증 기록이 모두 들어 있습니다. 클라우드는 M을 직접 읽거나 자동으로 저장하지 않습니다.
+완성 파일은 [GitHub 다운로드 폴더](downloads/README.md)에 있습니다.
+
+- [APK·소스·안내서 전체 ZIP](https://github.com/selfness-byte/mapswork/raw/refs/heads/codex/nearby-shop-alert/downloads/mapswork-complete.zip)
+- [Android 설치용 APK](https://github.com/selfness-byte/mapswork/raw/refs/heads/codex/nearby-shop-alert/downloads/mapswork-0.1.0-test.apk)
+
+개발과 빌드는 클라우드에서 합니다. 전체 ZIP을 다운로드한 뒤 Mac의 **M → 공통작업 → mapswork**에 보관하세요. APK·소스·안내서·검증 기록이 모두 들어 있습니다. 클라우드는 M을 직접 읽거나 자동으로 저장하지 않습니다.
 
 ## 클라우드 빌드
 
@@ -36,7 +41,7 @@ tools/cloud-gradle.sh :core:test :app:testDebugUnitTest :app:assembleDebug :app:
 python3 tools/package_delivery.py
 ```
 
-소스 ZIP에는 Git 추적 소스와 문서만 들어갑니다. 캐시, 사용자 상점 데이터, 인증 정보와 서명 키는 포함하지 않습니다. 향후 기존 앱에 업데이트하려면 같은 서명을 유지해야 합니다.
+소스 ZIP에는 Git 추적 소스와 문서만 들어갑니다. 캐시, 사용자 상점 데이터, 인증 정보와 서명 키는 포함하지 않습니다. `downloads/`는 Git 소스 아카이브에서 제외해 전달 파일이 소스 ZIP 안에 중첩되지 않게 합니다. 향후 기존 앱에 업데이트하려면 같은 서명을 유지해야 합니다.
 
 ## 문서
 

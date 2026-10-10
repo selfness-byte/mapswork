@@ -1,10 +1,12 @@
 # 이곳의 Google 지도·상점 검색 연결
 
-현재 전달 APK 0.2.0에는 Google API 키가 없습니다. Google 지도 앱/웹으로 검색·위치 보기는 가능하며, 앱 안에서 지도와 검색 결과를 선택하는 기능은 키를 넣어 다시 빌드해야 합니다.
+현재 전달 APK 0.3.0에는 Google API 키가 없습니다. 그래서 상점 추가 화면에 **Google 지도 연결 대기**가 표시됩니다. Google 지도 앱/웹으로 검색·위치 보기는 가능하며, 앱 안에서 지도와 검색 결과를 선택하는 기능은 키를 넣어 다시 빌드해야 합니다.
+
+Firebase 업데이트 파일 배포와 앱 내부 Google 지도 연결은 각각 설정합니다. Firebase Hosting에 파일을 배포해도 이미 설치된 APK에 Google 지도 키가 추가되지는 않습니다.
 
 ## 1. Google Cloud 설정
 
-1. [Google Cloud Console](https://console.cloud.google.com/)에서 본인 소유 프로젝트를 만듭니다.
+1. [Google Cloud Console](https://console.cloud.google.com/apis/dashboard?project=inanimals-1977)에서 기존 Firebase 프로젝트와 같은 **inanimals-1977** 프로젝트를 선택합니다.
 2. Google Maps Platform 사용에 필요한 결제 계정을 연결합니다. 검색은 사용량과 요청 필드에 따라 요금이 발생할 수 있습니다. [공식 요금 안내](https://developers.google.com/maps/billing-and-pricing/pricing)를 확인하세요. 앱이 대신 결제 계정을 만들거나 API를 활성화하지 않습니다.
 3. **Maps SDK for Android**와 **Places API (New)**를 활성화합니다.
 4. API 키를 발급합니다. 애플리케이션 제한을 **Android 앱**으로 설정하고 다음 정보를 등록합니다.
@@ -25,7 +27,7 @@ cd /workspace/mapswork
 tools/cloud-gradle.sh :core:test :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 ```
 
-키가 포함된 업데이트를 앱에서 제안하려면 `app/build.gradle.kts`의 버전 코드와 버전 이름을 올려야 합니다. 다음 빌드는 예를 들어 versionCode `3`, versionName `0.2.1`로 합니다. 기존 서명 키를 유지하고 소스를 커밋한 뒤 `tools/package_delivery.py`로 전달 파일을 만들고 GitHub에 게시합니다. 업데이트 메뉴는 더 큰 버전 코드만 제안합니다.
+키를 클라우드 환경 설정에 입력하고 설정을 저장·적용한 뒤 새 APK를 빌드해야 합니다. 키가 포함된 업데이트를 앱에서 제안하려면 `app/build.gradle.kts`의 버전 코드와 버전 이름도 올려야 합니다. 현재 0.3.0의 versionCode는 `3`이므로 다음 빌드는 예를 들어 versionCode `4`, versionName `0.3.1`로 합니다. 기존 서명 키를 유지하고 소스를 커밋한 뒤 `tools/package_delivery.py`로 전달 파일을 만들고 GitHub에 게시합니다. 업데이트 메뉴는 더 큰 버전 코드만 제안합니다.
 
 ## 3. 휴대폰 확인
 

@@ -73,7 +73,7 @@
 **Interfaces:**
 - `ShopRepository.shops: Flow<List<Shop>>`, `suspend fun all(): List<Shop>`, `suspend fun find(id: String): Shop?`.
 - `suspend fun save(draft: ShopDraft, id: String?): List<ValidationError>`, `suspend fun setEnabled(id: String, enabled: Boolean): List<ValidationError>`, `suspend fun delete(id: String)`.
-- `suspend fun consumeTransitions(ids: List<String>, transition: Transition, nowMillis: Long): List<Shop>`는 Room 트랜잭션에서 최신 설정과 상점 상태를 확인하고 알림 후보를 반환한다.
+- `suspend fun consumeTransitions(ids: List<String>, transition: Transition, nowMillis: Long, deliver: (Shop) -> Boolean): List<Shop>`는 Room 트랜잭션에서 최신 설정과 상태를 확인하고 전송 성공 후 방문 상태를 저장한다.
 - `AppSettings.alertsEnabled: StateFlow<Boolean>`, `fun setAlertsEnabled(enabled: Boolean)`.
 - `MapsworkApplication.container: AppContainer`는 저장소·설정·등록 관리자·알림 처리를 공유한다.
 
@@ -95,7 +95,7 @@
 
 - [x] **Step 1:** Task 1의 준비 규칙을 실제 Android 상태에 연결한다. 권한이 부족하면 등록을 시도하거나 준비 완료라고 표시하지 않는다.
 - [x] **Step 2:** ENTER·EXIT 감지와 INITIAL_TRIGGER_ENTER를 등록한다. API 31 이상의 mutable PendingIntent는 명시적 비공개 수신기로 제한한다. 등록 성공 시에만 등록 수를 반영한다.
-- [x] **Step 3:** 수신기는 `goAsync`와 제한된 비동기 DB 처리를 사용한다. 최신 전체·상점 설정을 재확인하고 Task 2의 원자적 방문 갱신 후 알림을 보낸다. 실패 이벤트·미등록 ID는 안전하게 무시한다.
+- [x] **Step 3:** 수신기는 `goAsync`와 도착 순서의 비동기 큐를 사용한다. 최신 전체·상점 설정을 확인하고 전송 성공 후 같은 DB 트랜잭션에서 방문을 갱신한다. 전송 거부는 방문을 소비하지 않으며 실패 이벤트·미등록 ID는 안전하게 무시한다.
 - [x] **Step 4:** 부팅·앱 교체 수신기와 WorkManager 복구를 구현한다. 앱 재진입에서도 상태를 확인하고 권한 부족·서비스 오류를 구체적으로 표시한다.
 - [x] **Step 5:** 알림 채널, 안정된 상점별 알림 ID, 상점 상세 진입을 구현한다.
 - [x] **Step 6:** `tools/cloud-gradle.sh :app:compileDebugKotlin :core:test`로 검증하고 커밋한다. 실제 위치 이벤트와 부팅 복구는 휴대폰 검증 대상으로 분리한다.
@@ -120,8 +120,8 @@
 
 **Files:** `README.md`, `docs/USER_GUIDE.ko.md`, `tools/package_delivery.py`, `.gitignore`, `dist/`(추적 제외), 환경의 `install_script`·`start_skill`.
 
-- [ ] **Step 1:** 전체 변경을 설계·권한 보안·삭제된 상점 이벤트·100개 한도·중복 억제·지도 정책·데이터 복원 관점에서 검토한다. 발견한 구체적인 문제만 수정하고 해당 검증을 다시 실행한다.
-- [ ] **Step 2:** `tools/cloud-gradle.sh :core:test :app:assembleDebug :app:lintDebug`를 실행해 실제 테스트 수와 빌드·검사 결과를 기록한다. SDK `apksigner verify --verbose`로 APK 서명을 확인한다.
+- [x] **Step 1:** 전체 변경을 설계·권한 보안·삭제된 상점 이벤트·100개 한도·중복 억제·지도 정책·데이터 복원 관점에서 검토한다. 발견한 구체적인 문제만 수정하고 해당 검증을 다시 실행한다.
+- [x] **Step 2:** `tools/cloud-gradle.sh :core:test :app:testDebugUnitTest :app:assembleDebug :app:lintDebug`를 실행해 실제 테스트 수와 빌드·검사 결과를 기록한다. SDK `apksigner verify --verbose`로 APK 서명을 확인한다.
 - [ ] **Step 3:** 개인 기기 설치용 검증 APK, Git 추적 소스만 담은 ZIP, 한국어 사용·검증 안내서와 SHA-256 목록을 만든다. APK의 기기 검증 미실시를 명확히 표시하고 키·캐시·로컬 설정은 소스 ZIP에서 제외한다.
-- [ ] **Step 4:** 실제로 실행한 도구 설치·시작·검증 절차를 환경 초안에 저장한다. 사용자 Drive 설정과 기존 네트워크 목록을 보존한다. 저장과 게시·새 환경 검증은 구분한다.
+- [x] **Step 4:** 실제로 실행한 도구 설치·시작·검증 절차를 환경 초안에 저장한다. 사용자 Drive 설정과 기존 네트워크 목록을 보존한다. 저장과 게시·새 환경 검증은 구분한다.
 - [ ] **Step 5:** 전달 파일의 내용·체크섬을 확인하고 최종 변경을 커밋한다. APK와 소스·안내서의 클라우드 파일 링크를 제공하고, 다운로드 후 M → 공통작업에 보관하는 방법을 안내한다.

@@ -2,7 +2,7 @@
 
 - 작성일: 2026-10-10
 - 프로젝트 이름: mapswork (임시)
-- 상태: 사용자 검토용 설계안. 앱 구현과 휴대폰 검증은 아직 시작하지 않았다.
+- 상태: 사용자 승인 후 첫 버전 구현. 클라우드 자동 검증 수행, 실제 휴대폰 시험은 미실시.
 
 ## 1. 만들려는 앱
 
@@ -24,7 +24,7 @@
 - 같은 방문 중에는 알림을 반복하지 않는다. GPS 오차로 경계를 오갈 때를 위해 같은 상점 알림 사이에 최소 30분 간격을 둔다.
 - Android 8.0 이상이며 Google Play 서비스가 있는 휴대폰을 지원 대상으로 한다.
 
-위 기본값은 사용자가 직접 선택한 사항과 구분한 제안이다. 설계 검토에서 조정할 수 있다.
+위 기본값은 설계 승인 뒤 첫 버전에 적용했다.
 
 ## 2. 기술 선택
 
@@ -187,4 +187,4 @@ Google 지도의 개인 저장 목록 가져오기와 Google Drive 백업은 이
 - Android 백그라운드 위치: https://developer.android.com/develop/sensors-and-location/location/permissions/background
 - OpenStreetMap 타일 사용 정책: https://operations.osmfoundation.org/policies/tiles/
 
-설계 작성 시 Android Geofencing 문서와 OpenStreetMap 타일 사용 정책 접속은 클라우드 프록시의 403 응답으로 확인하지 못했다. 구현 단계에서 사용할 API·SDK 버전과 지도 사용 정책을 다시 확인해야 한다.
+설계 작성 시 Android Geofencing 문서와 OpenStreetMap 타일 정책 웹사이트는 클라우드 프록시의 403 응답으로 확인하지 못했다. 구현 시 Google Play Location 21.3.0의 실제 SDK API를 사용해 컴파일했고, OSM 운영팀의 공식 GitHub 정책 원문을 확인해 HTTPS 주소·요청 식별·캐시·출처 표시와 사전 다운로드 금지를 적용했다.

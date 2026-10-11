@@ -1,0 +1,78 @@
+name: Verify APK and sync update information
+
+on:
+  push:
+    branches: [codex/nearby-shop-alert]
+    paths:
+      - 'downloads/*.apk'
+      - 'downloads/*.apk.sha256'
+      - '.github/workflows/sync-updates.yml'
+      - 'tools/apk_release.py'
+      - 'tools/sync_github_updates.py'
+      - 'tools/tests/**'
+  workflow_call:
+    inputs:
+      apk_commit:
+        description: Full commit containing the published APK and checksum
+        type: string
+        required: true
+      release_notes:
+        description: Optional release notes; existing notes are retained for the same APK
+        type: string
+        default: ''
+    outputs:
+      app_commit:
+        value: ${{ jobs.sync.outputs.app_commit }}
+      main_commit:
+        value: ${{ jobs.sync.outputs.main_commit }}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mapswork-update-information
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'selfness-byte/mapswork' && github.ref == 'refs/heads/codex/nearby-shop-alert'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    outputs:
+      app_commit: ${{ steps.sync.outputs.app_commit }}
+      main_commit: ${{ steps.sync.outputs.main_commit }}
+    steps:
+      - name: Check out the app branch with full APK history
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: codex/nearby-shop-alert
+          fetch-depth: 0
+      - name: Verify release gates and atomic Git updates
+        run: python3 -m unittest discover -s tools/tests -v
+      - name: Verify APK and publish both metadata commits
+        id: sync
+        env:
+          SOURCE_COMMIT: ${{ inputs.apk_commit || github.event.after }}
+          RELEASE_NOTES: ${{ inputs.release_notes }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          task_args=(sync --commit "$SOURCE_COMMIT" --push --report "$RUNNER_TEMP/mapswork-sync.json")
+          if [[ -n "$RELEASE_NOTES" ]]; then
+            printf '%s' "$RELEASE_NOTES" > "$RUNNER_TEMP/mapswork-notes.txt"
+            task_args+=(--notes-file "$RUNNER_TEMP/mapswork-notes.txt")
+          fi
+          python3 tools/sync_github_updates.py "${task_args[@]}"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          result = json.loads((Path(os.environ['RUNNER_TEMP']) / 'mapswork-sync.json').read_text())
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f"app_commit={result['appCommit']}\nmain_commit={result['mainCommit']}\n")
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write('## Verified Mapswork release\n\n```json\n' + json.dumps(result, indent=2, ensure_ascii=False) + '\n```\n')
+          PY

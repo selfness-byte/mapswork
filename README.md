@@ -1,8 +1,24 @@
 # 이곳 — Mapswork
 
+<!-- mapswork-latest:start -->
+## 최신 시험판 — 이곳 0.4.0
+
+- 버전 코드: **4** · minSdk **26**
+- [APK 다운로드](https://raw.githubusercontent.com/selfness-byte/mapswork/773727132552bf323fc1bdcb3248d8f530ed9e4a/downloads/mapswork-0.4.0-test.apk) — **18,653,298바이트**
+- [SHA-256 체크섬 파일](https://raw.githubusercontent.com/selfness-byte/mapswork/773727132552bf323fc1bdcb3248d8f530ed9e4a/downloads/mapswork-0.4.0-test.apk.sha256)
+- APK SHA-256: `16758cb07a575537ac7af8598a3192376e013283187c6a62cb6951a7fe03c850`
+- 서명 인증서 SHA-256: `80dfd84789e5c205b319562bf99bd33500b64000695594f1b8dbf2b58638cf40`
+- [업데이트 정보](downloads/update.json)
+
+앱을 열 때 새 버전이 있으면 업데이트 또는 나중에를 선택할 수 있습니다.
+설정에서 APK 다운로드 진행을 확인하고 파일 검증 후 Android 설치 확인 화면을 엽니다.
+앱 내부 지도·상점 검색은 Google Maps API 키가 설정되지 않아 연결 대기 상태입니다. Google 지도 앱이나 웹 검색 결과가 이 앱에 자동 등록되지는 않습니다.
+시험용 APK이며 실제 휴대폰 설치·업데이트 동작은 아직 확인되지 않았습니다.
+<!-- mapswork-latest:end -->
+
 Android 앱에 상점을 저장하고 근처에 도착하면 알림을 받는 개인용 앱입니다.
 
-## 0.3.0
+## 앱 기능
 
 - 지도에서 상점 위치 선택, 이름 입력, 수정·삭제
 - 알림 반경 100m / **200m 기본** / 500m / 1km
@@ -15,7 +31,7 @@ Android 앱에 상점을 저장하고 근처에 도착하면 알림을 받는 �
 
 Android 8.0 이상, Google Play 서비스가 있는 ARM 휴대폰이 필요합니다. 위치 감지는 Google Play Geofencing, 지도·검색은 Google Maps/Places SDK를 사용합니다. **현재 APK에는 Google API 키가 없어 앱 내부 지도·검색은 연결 대기 상태입니다.** Google 지도 앱/웹 검색·위치 보기와 현재 위치를 상점 위치로 선택하기는 사용할 수 있습니다. 앱 내부 지도 연결은 [Google 설정 안내](docs/GOOGLE_MAPS_SETUP.ko.md)를 따릅니다. 검색 사용량에 따라 요금이 생길 수 있습니다. Google 지도 저장 목록 가져오기·Drive 백업은 없습니다.
 
-**0.3.0 검증용 APK**입니다. Firebase 프로젝트 `inanimals-1977`의 기존 사이트 `https://inanimals-1977.web.app/mapswork/update.json`을 읽도록 구성했습니다. 기존 웹사이트 배포 소스와 인증을 확인하지 못해 Firebase 파일 배포는 아직 수행하지 않았습니다. 연결 실패 시 GitHub에서 확인합니다. [Firebase 파일 추가 안내](docs/FIREBASE_UPDATE_SETUP.ko.md)를 따릅니다.
+공개 시험판 APK입니다. Firebase 프로젝트 `inanimals-1977`의 기존 사이트 `https://inanimals-1977.web.app/mapswork/update.json`을 읽도록 구성했습니다. 기존 웹사이트 배포 소스와 인증을 확인하지 못해 Firebase 파일 배포는 아직 수행하지 않았습니다. 연결 실패 시 GitHub에서 확인합니다. [Firebase 파일 추가 안내](docs/FIREBASE_UPDATE_SETUP.ko.md)를 따릅니다.
 
 클라우드 자동 시험과 빌드를 확인하며, 실제 휴대폰의 지도·검색·업데이트 설치·예약 알림·재부팅 복구는 별도 기기 시험이 필요합니다.
 
@@ -25,10 +41,10 @@ Android 8.0 이상, Google Play 서비스가 있는 ARM 휴대폰이 필요합�
 
 완성 파일은 [GitHub 다운로드 폴더](https://github.com/selfness-byte/mapswork/tree/codex/nearby-shop-alert/downloads)에 있습니다.
 
-- [APK·소스·안내서 전체 ZIP](https://github.com/selfness-byte/mapswork/raw/refs/heads/codex/nearby-shop-alert/downloads/mapswork-complete.zip)
-- [Android 설치용 APK](https://github.com/selfness-byte/mapswork/raw/refs/heads/codex/nearby-shop-alert/downloads/mapswork-0.3.0-test.apk)
-- [Firebase 사이트에 추가할 파일](https://github.com/selfness-byte/mapswork/raw/refs/heads/codex/nearby-shop-alert/downloads/mapswork-firebase-hosting.zip)
-- [Mac APK 저장 도구](https://github.com/selfness-byte/mapswork/raw/refs/heads/codex/nearby-shop-alert/downloads/save-apk-to-mac.command)
+- [이전 0.3.0 APK·소스·안내서 ZIP](https://github.com/selfness-byte/mapswork/raw/refs/heads/codex/nearby-shop-alert/downloads/mapswork-complete.zip)
+- [Android 설치용 APK](https://raw.githubusercontent.com/selfness-byte/mapswork/773727132552bf323fc1bdcb3248d8f530ed9e4a/downloads/mapswork-0.4.0-test.apk)
+- [이전 0.3.0 Firebase 배포 파일](https://github.com/selfness-byte/mapswork/raw/refs/heads/codex/nearby-shop-alert/downloads/mapswork-firebase-hosting.zip)
+- [이전 0.3.0 Mac APK 저장 도구](https://github.com/selfness-byte/mapswork/raw/refs/heads/codex/nearby-shop-alert/downloads/save-apk-to-mac.command)
 
 개발과 빌드는 클라우드에서 합니다. 전체 ZIP은 Mac의 **M → 공통작업 → mapswork-github**에 보관하세요. APK·소스·안내서·Firebase 배포 파일·검증 기록이 모두 들어 있습니다. 클라우드는 M을 직접 읽거나 자동으로 저장하지 않습니다. 저장 도구를 Mac에서 실행하면 실제 `mapswork-github` 폴더를 선택해 APK만 받을 수도 있습니다.
 

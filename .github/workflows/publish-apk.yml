@@ -1,0 +1,72 @@
+name: Publish verified APK and refresh update information
+
+on:
+  workflow_call:
+    inputs:
+      artifact_name:
+        description: Artifact from this workflow run containing exactly one versioned Mapswork APK
+        type: string
+        required: true
+      release_notes:
+        description: Optional release notes for the new APK
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mapswork-apk-publication
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'selfness-byte/mapswork' && github.ref == 'refs/heads/codex/nearby-shop-alert'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    outputs:
+      commit: ${{ steps.publish.outputs.commit }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: codex/nearby-shop-alert
+          fetch-depth: 0
+      - name: Retrieve the APK built by the caller
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: ${{ runner.temp }}/mapswork-artifact
+      - name: Verify APK before publication
+        id: publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          python3 - <<'PY'
+          import json, os, subprocess
+          from pathlib import Path
+          root = Path(os.environ['RUNNER_TEMP'])
+          apks = list((root / 'mapswork-artifact').rglob('*.apk'))
+          if len(apks) != 1 or apks[0].is_symlink():
+              raise SystemExit('The artifact must contain exactly one regular APK')
+          report = root / 'mapswork-publish.json'
+          subprocess.run(['python3', 'tools/sync_github_updates.py', 'publish', '--apk', str(apks[0]),
+                          '--push', '--report', str(report)], check=True)
+          result = json.loads(report.read_text())
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f"commit={result['postedCommit']}\n")
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write('## APK publication\n\n```json\n' + json.dumps(result, indent=2) + '\n```\n')
+          PY
+  refresh:
+    needs: publish
+    permissions:
+      contents: write
+    uses: ./.github/workflows/sync-updates.yml
+    with:
+      apk_commit: ${{ needs.publish.outputs.commit }}
+      release_notes: ${{ inputs.release_notes }}

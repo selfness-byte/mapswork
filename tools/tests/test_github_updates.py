@@ -55,6 +55,26 @@ class ApkGateTests(unittest.TestCase):
             with self.assertRaisesRegex(release.ReleaseError, "certificate"):
                 release.verify_apk(APK, self.tools)
 
+    def test_sdk37_certificate_format_keeps_same_trusted_signer(self):
+        badging = release.run_tool([str(self.tools / "aapt"), "dump", "badging", str(APK)])
+        # Actual public SDK 37 output from Actions run 38116965844.
+        signing = ("Verified using v2 scheme (APK Signature Scheme v2): true\n"
+                   "V2 Signer: certificate SHA-256 digest: " + release.TRUSTED_CERT_SHA256 + "\n"
+                   "V2 Signer: public key SHA-256 digest: c20f15a984175bf82ccb67ec95640a59f151a9b22d5f52c7fb1f40cc0db665b1\n")
+        with patch.object(release, "run_tool", side_effect=[badging, signing]):
+            verified = release.verify_apk(APK, self.tools)
+        self.assertEqual(verified.signer_sha256, release.TRUSTED_CERT_SHA256)
+        self.assertEqual(verified.sha256, EXPECTED_SHA)
+
+    def test_sdk37_additional_untrusted_scheme_certificate_is_rejected(self):
+        badging = release.run_tool([str(self.tools / "aapt"), "dump", "badging", str(APK)])
+        signing = ("Verified using v2 scheme (APK Signature Scheme v2): true\n"
+                   "V2 Signer: certificate SHA-256 digest: " + release.TRUSTED_CERT_SHA256 + "\n"
+                   "V3 Signer: certificate SHA-256 digest: " + "b" * 64 + "\n")
+        with patch.object(release, "run_tool", side_effect=[badging, signing]):
+            with self.assertRaisesRegex(release.ReleaseError, "certificate"):
+                release.verify_apk(APK, self.tools)
+
     def test_filename_must_match_actual_apk_version(self):
         with tempfile.TemporaryDirectory() as directory:
             wrong = Path(directory) / "mapswork-9.9.9-test.apk"

@@ -67,10 +67,12 @@ def verify_apk(path: Path, build_tools: Path) -> VerifiedApk:
     if path.name != f"mapswork-{name}-test.apk":
         raise ReleaseError("APK filename must match its actual versionName")
     signing = run_tool([str(build_tools / "apksigner"), "verify", "--verbose", "--print-certs", str(path)])
-    certificates = re.findall(r"^Signer #[0-9]+ certificate SHA-256 digest: ([0-9a-fA-F]{64})$", signing, re.M)
-    if [c.lower() for c in certificates] != [TRUSTED_CERT_SHA256]:
+    certificates = re.findall(
+        r"^(?:Signer #[0-9]+|V[0-9]+(?:\.[0-9]+)? Signer(?: #[0-9]+)?):? "
+        r"certificate SHA-256 digest: ([0-9a-fA-F]{64})[ \t]*$", signing, re.M)
+    if {c.lower() for c in certificates} != {TRUSTED_CERT_SHA256}:
         public_diagnostics = "\n".join(line for line in signing.splitlines()
-                                       if "SHA-256" in line or line.startswith("Verified using"))
+                                       if "certificate SHA-256" in line or line.startswith("Verified using"))
         raise ReleaseError(f"APK certificate differs from the existing trusted test signer; "
                            f"build-tools={build_tools.name}; parsed={certificates}\n{public_diagnostics}")
     if not re.search(r"Verified using v2 scheme .*: true", signing):

@@ -63,8 +63,8 @@
 
 - [x] Verify current public 0.4 APK against its stored checksum/signature; generate current guide corrections.
 - [x] Inspect exact app/main commit path lists before atomic fast-forward push.
-- [ ] Push approved workflows/scripts/checks/guides; verify remote commit SHAs and original local-file snapshot.
-- [ ] Read GitHub Actions result when accessible; report actual server execution separately from successful local checks and push.
+- [x] Push approved workflows/scripts/checks/guides; verify remote commit SHAs and original local-file snapshot.
+- [x] Read GitHub Actions result when accessible; report actual server execution separately from successful local checks and push.
 
 ## Execution ledger
 
@@ -74,3 +74,5 @@
 - Final: fixed both Important findings — late-race and pending-published-versionCode tests RED→GREEN; final suite 20/20 passed. YAML, shell syntax and Python compilation passed.
 - Ruling: when there is a one-sided repair, create a tree-identical coordination child on the other branch — Git otherwise omits its up-to-date ref from the atomic receive transaction — cost: one empty coordination commit; complete no-op still creates no commits.
 - Ruling: use current remote source for automation and preserve unpublished 0.4 application files in the original checkout — user explicitly deferred missing commit recovery — cost: no automatic application compilation until a separate build pipeline is connected.
+- Server diagnosis: initial tests stopped before publication because Android build-tools 37 changed certificate labels from `Signer #1` to `V2 Signer:`. Public diagnostics confirmed the actual certificate still equals the pinned existing signer; SDK 37 format regression reproduced locally before the parser fix.
+- SDK 37 compatibility: regression RED→GREEN with original trust fingerprint unchanged; local final suite 22/22 passed. The compatibility commit triggers another server run; its actual result is reported separately.

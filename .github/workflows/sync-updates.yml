@@ -50,7 +50,18 @@ jobs:
           ref: codex/nearby-shop-alert
           fetch-depth: 0
       - name: Verify release gates and atomic Git updates
-        run: python3 -m unittest discover -s tools/tests -v
+        run: |
+          python3 - <<'PY'
+          import subprocess
+          result = subprocess.run(['python3', '-m', 'unittest', 'discover', '-s', 'tools/tests', '-v'],
+                                  text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+          print(result.stdout, end='')
+          if result.returncode:
+              # Public annotations expose test diagnostics without requiring log sign-in.
+              diagnostic = result.stdout[-12000:].replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+              print('::error::Release gate tests failed: ' + diagnostic)
+          raise SystemExit(result.returncode)
+          PY
       - name: Verify APK and publish both metadata commits
         id: sync
         env:

@@ -1,31 +1,24 @@
-# 이곳 다운로드
+# 이곳 공식 설치·업데이트 파일
 
-## 이곳 0.3.0 검증용
+이곳(Mapswork)의 공개 Android 시험판 설치 파일과 앱이 읽는 버전 정보입니다. 실제 APK와 업데이트 정보는 이 폴더에 두고, Inanimals 사이트는 앱 소개·제작 기록·다운로드 안내를 위한 별도 포털로 준비 중입니다.
 
-- [Android APK 다운로드](https://github.com/selfness-byte/mapswork/raw/refs/heads/codex/nearby-shop-alert/downloads/mapswork-0.3.0-test.apk)
-- [전체 파일 ZIP](https://github.com/selfness-byte/mapswork/raw/refs/heads/codex/nearby-shop-alert/downloads/mapswork-complete.zip) — APK·소스·안내서·Firebase 배포 파일·검증 기록 포함
-- [Firebase 배포 파일 ZIP](https://github.com/selfness-byte/mapswork/raw/refs/heads/codex/nearby-shop-alert/downloads/mapswork-firebase-hosting.zip)
-- [Mac APK 저장 도구](https://github.com/selfness-byte/mapswork/raw/refs/heads/codex/nearby-shop-alert/downloads/save-apk-to-mac.command)
-- [사용 안내](../docs/USER_GUIDE.ko.md) · [Firebase 설정](../docs/FIREBASE_UPDATE_SETUP.ko.md) · [Google 지도 설정](../docs/GOOGLE_MAPS_SETUP.ko.md) · [체크섬](SHA256SUMS.txt)
+## 최신 시험판 — 이곳 0.4.0
 
-Firebase Hosting의 버전 파일로 하루 한 번 새 버전을 자동 확인하고 알림을 표시합니다. 설정에서 자동 확인을 끌 수 있습니다. 알림을 누르면 설정이 열립니다. APK 다운로드와 Android 설치 확인은 사용자가 선택합니다.
+- 버전 코드: **4** · Android 8.0 이상
+- [APK 다운로드](https://raw.githubusercontent.com/selfness-byte/mapswork/773727132552bf323fc1bdcb3248d8f530ed9e4a/downloads/mapswork-0.4.0-test.apk) — **18,653,298바이트**
+- [단일 파일 SHA-256 체크섬](https://raw.githubusercontent.com/selfness-byte/mapswork/773727132552bf323fc1bdcb3248d8f530ed9e4a/downloads/mapswork-0.4.0-test.apk.sha256)
+- SHA-256: `16758cb07a575537ac7af8598a3192376e013283187c6a62cb6951a7fe03c850`
+- APK v2 서명 인증서 SHA-256: `80dfd84789e5c205b319562bf99bd33500b64000695594f1b8dbf2b58638cf40` (0.3.0 시험판과 같음)
+- [앱의 GitHub 대체 업데이트 정보](update.json): versionCode 4, 위 APK의 고정 커밋 주소·크기·SHA-256을 기록합니다.
 
-프로젝트는 `inanimals-1977`, 버전 정보 주소는 `https://inanimals-1977.web.app/mapswork/update.json`입니다. **Firebase 파일 배포는 아직 수행하지 않았습니다.** 연결 전·접속 실패 시 GitHub 버전 파일에서 확인합니다. Firebase ZIP은 기존 사이트의 공개 폴더에 추가할 파일이며, 기존 사이트 파일 전체와 함께 배포해야 합니다. 파일 추가 순서는 설정 안내에 있습니다. APK는 GitHub에서 전송하므로 Firebase에는 작은 버전 정보와 안내 페이지만 둡니다.
+0.4.0에는 앱을 열 때 새 버전이 있으면 **업데이트/나중에** 선택하는 안내가 추가됐습니다. 0.3.0을 사용 중이면 기존의 주기적 알림이나 설정의 수동 확인으로 0.4.0을 찾을 수 있습니다. 설치 확인과 출처 허용은 Android에서 사용자가 진행합니다.
 
-같은 앱 서명으로 업데이트하면 상점 데이터가 유지됩니다. 기존 앱을 삭제하지 마세요. 0.1.0에는 업데이트 메뉴가 없어 새 APK를 직접 설치해야 합니다. 0.2.0에서는 기존 설정의 업데이트 메뉴로 0.3.0을 설치할 수 있습니다. `update.json`은 APK 버전·URL·SHA-256·변경 내용을 담으며 앱은 해시·앱 식별자·버전·기존 서명을 검사합니다.
+### 설치 방법
 
-현재 API 키가 없어 앱 내부 Google 지도·검색은 연결 대기입니다. Google 지도 앱/웹 검색·위치 보기와 현재 위치를 상점 위치로 선택하기는 사용할 수 있습니다.
+1. Android 기기에서 위 APK를 내려받고 파일을 엽니다. 체크섬 파일의 SHA-256과 받은 APK의 해시가 일치하는지 확인할 수 있습니다.
+2. 기존 이곳 앱이 있으면 **삭제하지 말고** 그 위에 설치합니다. 기존 앱과 서명이 다르면 Android가 덮어 설치를 거부합니다. 데이터 보존을 위해 서명 오류를 앱 삭제로 해결하지 마세요.
+3. Android의 설치 확인 화면에서 직접 승인합니다. **앱 안의 업데이트 기능**을 사용하면 APK의 해시·패키지명·더 높은 버전 코드·기존 앱과 같은 서명을 검사합니다. 브라우저에서 직접 받은 파일은 위 체크섬으로 확인하세요.
 
-개인 기기 시험용 디버그 서명 APK입니다. Android 8.0 이상, Google Play 서비스가 있는 ARM 휴대폰용입니다. 자동 시험 115개와 빌드·정적 검사를 통과했습니다. 실제 Firebase 배포·휴대폰의 지도·검색·설치·백그라운드 알림은 아직 확인하지 않았습니다.
+**시험용 디버그 서명 APK이며 Google Play 정식 배포본이 아닙니다.** 실제 휴대폰에서의 설치·업데이트와 데이터 보존은 아직 검증하지 않았습니다. 현재 APK에는 Google Maps API 키가 설정되지 않아 앱 내부 지도·상점 검색이 연결 대기로 표시됩니다. Google 지도 앱이나 웹 검색을 열 수 있지만 그 결과가 이곳에 자동 등록되지는 않습니다.
 
-## Mac의 mapswork-github에 저장
-
-Mac에서 아래 명령을 실행하면 폴더 선택 창이 열립니다. 실제 **mapswork-github** 폴더를 선택하면 APK를 받아 체크섬을 확인한 뒤 저장합니다. 별도 Android 빌드 도구는 설치하지 않습니다.
-
-```bash
-curl -fL 'https://raw.githubusercontent.com/selfness-byte/mapswork/codex/nearby-shop-alert/downloads/save-apk-to-mac.command' -o /tmp/mapswork-save.command && bash /tmp/mapswork-save.command
-```
-
-전체 ZIP은 원하는 `mapswork-github` 폴더에 보관하세요. 클라우드는 Mac이나 외장하드 M에 직접 접근하지 않습니다.
-
-이 폴더는 Git 소스 아카이브에서 제외합니다. 인증키·서명 키·캐시·사용자 상점 데이터는 소스 ZIP에 포함하지 않습니다.
+이 폴더의 0.1.0~0.3.0 APK, ZIP, 문서 및 Mac 저장 도구는 이전 전달 자료로 보존합니다. 최신 0.4.0 설치 파일은 위의 APK와 체크섬입니다. 새 버전을 게시할 때는 패키지명·버전·서명·실제 바이트 해시를 검증한 뒤 버전 정보 파일을 갱신합니다.

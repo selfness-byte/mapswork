@@ -119,6 +119,7 @@ def make_manifest(release: VerifiedApk, commit: str, notes: str) -> dict:
 
 
 def latest_block(manifest: dict, metadata_link: str) -> str:
+    guide_link = "#설치" if metadata_link == "update.json" else metadata_link.removesuffix("update.json") + "README.md"
     return f"""{START}
 ## 최신 시험판 — 이곳 {manifest['versionName']}
 
@@ -128,6 +129,7 @@ def latest_block(manifest: dict, metadata_link: str) -> str:
 - APK SHA-256: `{manifest['sha256']}`
 - 서명 인증서 SHA-256: `{TRUSTED_CERT_SHA256}`
 - [업데이트 정보]({metadata_link})
+- [설치 안내]({guide_link})
 
 {manifest['notes']}
 {END}"""

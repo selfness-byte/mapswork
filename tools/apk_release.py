@@ -69,7 +69,10 @@ def verify_apk(path: Path, build_tools: Path) -> VerifiedApk:
     signing = run_tool([str(build_tools / "apksigner"), "verify", "--verbose", "--print-certs", str(path)])
     certificates = re.findall(r"^Signer #[0-9]+ certificate SHA-256 digest: ([0-9a-fA-F]{64})$", signing, re.M)
     if [c.lower() for c in certificates] != [TRUSTED_CERT_SHA256]:
-        raise ReleaseError("APK certificate differs from the existing trusted test signer")
+        public_diagnostics = "\n".join(line for line in signing.splitlines()
+                                       if "SHA-256" in line or line.startswith("Verified using"))
+        raise ReleaseError(f"APK certificate differs from the existing trusted test signer; "
+                           f"build-tools={build_tools.name}; parsed={certificates}\n{public_diagnostics}")
     if not re.search(r"Verified using v2 scheme .*: true", signing):
         raise ReleaseError("APK requires a valid v2 signature for Android 8 compatibility")
     with path.open("rb") as stream:
